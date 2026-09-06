@@ -1,0 +1,129 @@
+<div class="min-h-screen bg-slate-950 p-6">
+
+    <div class="mx-auto max-w-7xl">
+
+        <nav class="mb-8 flex flex-wrap items-center gap-3 rounded-xl border border-slate-800 bg-slate-900 p-4">
+
+            <a routerLink="/cliente" class="rounded-lg px-4 py-2 text-slate-300 hover:bg-slate-800">
+                Dashboard
+            </a>
+
+            <a routerLink="/cliente/tarjetas" class="rounded-lg bg-emerald-600 px-4 py-2 text-white">
+                Mis tarjetas
+            </a>
+
+            <a routerLink="/cliente/historial" class="rounded-lg px-4 py-2 text-slate-300 hover:bg-slate-800">
+                Mi historial
+            </a>
+
+            <div class="ml-auto">
+                <app-logout-button></app-logout-button>
+            </div>
+        </nav>
+
+
+        <h1 class="text-3xl font-bold text-white">
+            Mis Tarjetas
+        </h1>
+
+        <p class="mt-2 text-slate-400">
+            Consulta tus tarjetas y saldo disponible.
+        </p>
+
+
+        <div *ngIf="error" class="mt-6 rounded-lg border border-red-800 bg-red-950 p-3 text-red-300">
+            {{ error }}
+        </div>
+
+
+        <div class="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+
+            <div *ngFor="let tarjeta of tarjetas"
+                class="rounded-2xl border border-slate-700 bg-gradient-to-br from-slate-800 to-slate-950 p-6 shadow-xl">
+
+                <div class="flex items-start justify-between">
+
+                    <div>
+
+                        <p class="text-sm text-slate-400">
+                            {{ tarjeta.emisor }}
+                        </p>
+
+                        <p class="mt-1 text-xs text-slate-500">
+                            {{ tarjeta.estado }}
+                        </p>
+
+                    </div>
+
+                    <div class="text-3xl">
+                        💳
+                    </div>
+
+                </div>
+
+
+                <div class="mt-8 font-mono text-xl tracking-wider text-white">
+                    {{ tarjeta.numero_tarjeta }}
+                </div>
+
+
+                <div class="mt-8 grid grid-cols-2 gap-4">
+
+                    <div>
+
+                        <p class="text-xs uppercase text-slate-500">
+                            Titular
+                        </p>
+
+                        <p class="mt-1 text-sm text-white">
+                            {{ tarjeta.nombre_titular }}
+                        </p>
+
+                    </div>
+
+
+                    <div>
+
+                        <p class="text-xs uppercase text-slate-500">
+                            Vence
+                        </p>
+
+                        <p class="mt-1 text-sm text-white">
+                            {{ tarjeta.fecha_vencimiento }}
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="mt-6 border-t border-slate-700 pt-5">
+
+                    <p class="text-sm text-slate-400">
+                        Disponible
+                    </p>
+
+                    <p class="mt-1 text-3xl font-bold text-emerald-400">
+                        Q{{ tarjeta.monto_disponible | number:'1.2-2' }}
+                    </p>
+
+                    <p class="mt-1 text-sm text-slate-500">
+                        Límite:
+                        Q{{ tarjeta.monto_autorizado | number:'1.2-2' }}
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div *ngIf="!cargando && tarjetas.length === 0"
+            class="mt-8 rounded-xl border border-slate-800 bg-slate-900 p-8 text-center text-slate-500">
+            No tienes tarjetas registradas.
+        </div>
+
+    </div>
+
+</div>

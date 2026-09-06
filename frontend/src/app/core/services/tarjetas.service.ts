@@ -1,0 +1,93 @@
+import {
+    Injectable
+} from '@angular/core';
+
+import {
+    HttpClient
+} from '@angular/common/http';
+
+import {
+    Observable
+} from 'rxjs';
+
+import {
+    environment
+} from '../../../environments/environment';
+
+import {
+    ActualizarTarjetaRequest,
+    CrearTarjetaRequest,
+    TarjetaResponse,
+    TarjetasResponse
+} from '../models/tarjeta.model';
+
+
+@Injectable({
+    providedIn: 'root'
+})
+export class TarjetasService {
+
+    private readonly apiUrl =
+        `${environment.apiUrl}/tarjetas`;
+
+
+    constructor(
+        private http: HttpClient
+    ) {}
+
+
+    listarTodas():
+        Observable<TarjetasResponse> {
+
+        return this.http.get<TarjetasResponse>(
+            this.apiUrl
+        );
+
+    }
+
+
+    crear(
+        datos: CrearTarjetaRequest
+    ): Observable<TarjetaResponse> {
+
+        return this.http.post<TarjetaResponse>(
+            this.apiUrl,
+            datos
+        );
+
+    }
+
+
+    actualizar(
+        idTarjeta: number,
+        datos: ActualizarTarjetaRequest
+    ): Observable<TarjetaResponse> {
+
+        return this.http.put<TarjetaResponse>(
+            `${this.apiUrl}/${idTarjeta}`,
+            datos
+        );
+
+    }
+
+
+    cancelar(
+        idTarjeta: number
+    ): Observable<TarjetaResponse> {
+
+        return this.http.delete<TarjetaResponse>(
+            `${this.apiUrl}/${idTarjeta}`
+        );
+
+    }
+
+    listarMias():
+    Observable<TarjetasResponse> {
+
+    return this.http.get<TarjetasResponse>(
+        `${this.apiUrl}/mias`
+    );
+
+}
+
+}

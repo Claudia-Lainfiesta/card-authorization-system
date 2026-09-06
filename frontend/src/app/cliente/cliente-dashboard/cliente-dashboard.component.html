@@ -1,0 +1,131 @@
+<div class="min-h-screen bg-slate-950 p-6">
+
+    <div class="mx-auto max-w-7xl">
+
+        <nav class="mb-8 flex flex-wrap items-center gap-3 rounded-xl border border-slate-800 bg-slate-900 p-4">
+
+            <a routerLink="/cliente" class="rounded-lg bg-emerald-600 px-4 py-2 text-white">
+                Dashboard
+            </a>
+
+            <a routerLink="/cliente/tarjetas" class="rounded-lg px-4 py-2 text-slate-300 hover:bg-slate-800">
+                Mis tarjetas
+            </a>
+
+            <a routerLink="/cliente/historial" class="rounded-lg px-4 py-2 text-slate-300 hover:bg-slate-800">
+                Mi historial
+            </a>
+
+            <div class="ml-auto">
+                <app-logout-button></app-logout-button>
+            </div>
+        </nav>
+
+
+        <div class="mb-8">
+
+            <p class="text-sm font-semibold uppercase tracking-wider text-emerald-400">
+                Cliente
+            </p>
+
+            <h1 class="mt-2 text-4xl font-bold text-white">
+                Hola, {{ nombre }}
+            </h1>
+
+            <p class="mt-2 text-slate-400">
+                Resumen de tus tarjetas y movimientos.
+            </p>
+
+        </div>
+
+
+        <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+
+            <div class="rounded-xl border border-slate-800 bg-slate-900 p-6">
+
+                <p class="text-sm text-slate-400">
+                    Mis tarjetas
+                </p>
+
+                <p class="mt-2 text-3xl font-bold text-white">
+                    {{ totalTarjetas }}
+                </p>
+
+            </div>
+
+
+            <div class="rounded-xl border border-slate-800 bg-slate-900 p-6">
+
+                <p class="text-sm text-slate-400">
+                    Activas
+                </p>
+
+                <p class="mt-2 text-3xl font-bold text-emerald-400">
+                    {{ tarjetasActivas }}
+                </p>
+
+            </div>
+
+
+            <div class="rounded-xl border border-slate-800 bg-slate-900 p-6">
+
+                <p class="text-sm text-slate-400">
+                    Disponible
+                </p>
+
+                <p class="mt-2 text-3xl font-bold text-indigo-400">
+                    Q{{ saldoDisponible | number:'1.2-2' }}
+                </p>
+
+            </div>
+
+
+            <div class="rounded-xl border border-slate-800 bg-slate-900 p-6">
+
+                <p class="text-sm text-slate-400">
+                    Movimientos
+                </p>
+
+                <p class="mt-2 text-3xl font-bold text-white">
+                    {{ totalTransacciones }}
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="mt-8 grid gap-5 md:grid-cols-2">
+
+            <a routerLink="/cliente/tarjetas"
+                class="rounded-xl border border-slate-800 bg-slate-900 p-6 transition hover:border-emerald-500">
+
+                <h2 class="text-xl font-bold text-white">
+                    💳 Mis tarjetas
+                </h2>
+
+                <p class="mt-2 text-slate-400">
+                    Consulta tus tarjetas y saldo disponible.
+                </p>
+
+            </a>
+
+
+            <a routerLink="/cliente/historial"
+                class="rounded-xl border border-slate-800 bg-slate-900 p-6 transition hover:border-emerald-500">
+
+                <h2 class="text-xl font-bold text-white">
+                    📋 Mi historial
+                </h2>
+
+                <p class="mt-2 text-slate-400">
+                    Revisa consumos, pagos y reversos.
+                </p>
+
+            </a>
+
+        </div>
+
+    </div>
+
+</div>

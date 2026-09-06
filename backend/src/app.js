@@ -27,6 +27,11 @@ const tarjetasRoutes =
 const transaccionesRoutes =
     require('./modules/transacciones/transacciones.routes');
 
+const autorizacionesRoutes =
+    require(
+        './modules/autorizaciones/autorizaciones.routes'
+    );
+
 const app =
     express();
 
@@ -132,6 +137,12 @@ app.use(
 app.use(
     '/api/v1/transacciones',
     transaccionesRoutes
+);
+
+// Autorizaciones
+app.use(
+    '/ws/v1',
+    autorizacionesRoutes
 );
 
 

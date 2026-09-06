@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "test:db": "node tests/db-connection.js"
+    "test:db": "node tests/db-connection.js",
+    "seed:comercio": "node scripts/seed-comercio.js"
   },
   "keywords": [],
   "author": "",

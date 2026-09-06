@@ -1,0 +1,122 @@
+<div class="min-h-screen bg-slate-950 p-6">
+
+    <div class="mx-auto max-w-7xl">
+
+        <nav class="mb-8 flex flex-wrap items-center gap-3 rounded-xl border border-slate-800 bg-slate-900 p-4">
+
+            <a routerLink="/cliente" class="rounded-lg px-4 py-2 text-slate-300 hover:bg-slate-800">
+                Dashboard
+            </a>
+
+            <a routerLink="/cliente/tarjetas" class="rounded-lg px-4 py-2 text-slate-300 hover:bg-slate-800">
+                Mis tarjetas
+            </a>
+
+            <a routerLink="/cliente/historial" class="rounded-lg bg-emerald-600 px-4 py-2 text-white">
+                Mi historial
+            </a>
+
+            <div class="ml-auto">
+                <app-logout-button></app-logout-button>
+            </div>
+        </nav>
+
+
+        <h1 class="text-3xl font-bold text-white">
+            Mi Historial
+        </h1>
+
+        <p class="mb-8 mt-2 text-slate-400">
+            Consulta tus consumos, pagos y reversos.
+        </p>
+
+
+        <div *ngIf="error" class="mb-5 rounded-lg border border-red-800 bg-red-950 p-3 text-red-300">
+            {{ error }}
+        </div>
+
+
+        <div class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-900">
+
+            <table class="w-full text-left">
+
+                <thead class="border-b border-slate-800 text-sm text-slate-400">
+
+                    <tr>
+
+                        <th class="p-4">Fecha</th>
+                        <th class="p-4">Tarjeta</th>
+                        <th class="p-4">Tipo</th>
+                        <th class="p-4">Comercio</th>
+                        <th class="p-4">Monto</th>
+                        <th class="p-4">Estado</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    <tr *ngFor="let transaccion of transacciones" class="border-b border-slate-800 text-slate-300">
+
+                        <td class="p-4">
+
+                            {{ transaccion.fecha
+                            | date:'dd/MM/yyyy HH:mm'
+                            }}
+
+                        </td>
+
+                        <td class="p-4 font-mono">
+
+                            {{ transaccion.numero_tarjeta }}
+
+                        </td>
+
+                        <td class="p-4">
+
+                            {{ transaccion.tipo }}
+
+                        </td>
+
+                        <td class="p-4">
+
+                            {{ transaccion.comercio || '-' }}
+
+                        </td>
+
+                        <td class="p-4 font-semibold">
+
+                            Q{{ transaccion.monto | number:'1.2-2' }}
+
+                        </td>
+
+                        <td class="p-4">
+
+                            {{ transaccion.estado }}
+
+                        </td>
+
+                    </tr>
+
+
+                    <tr *ngIf="!cargando && transacciones.length === 0">
+
+                        <td colspan="6" class="p-8 text-center text-slate-500">
+
+                            No tienes transacciones registradas.
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
