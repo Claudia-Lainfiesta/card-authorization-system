@@ -203,7 +203,23 @@ const actualizarFavorita = async (req, res, next) => {
 };
 
 
+const revelar = async (req, res, next) => {
+    res.set('Cache-Control', 'no-store, private');
+    res.set('Pragma', 'no-cache');
+    try {
+        res.json({ tarjeta: await tarjetasService.revelar(req.params.id, req.user) });
+    } catch (error) { next(error); }
+};
+
+const buscar = async (req, res, next) => {
+    res.set('Cache-Control', 'no-store');
+    try { res.json({ tarjetas: await tarjetasService.buscar(req.body.busqueda) }); }
+    catch (error) { next(error); }
+};
+
 module.exports = {
+    buscar,
+    revelar,
 
     actualizarFavorita,
 

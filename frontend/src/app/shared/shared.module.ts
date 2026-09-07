@@ -19,9 +19,13 @@ import {
 } from './components/logout-button/logout-button.component';
 
 
+import { NavbarComponent } from './components/navbar/navbar.component';
+import { MercuryModalComponent } from './components/mercury-modal/mercury-modal.component';
+
 @NgModule({
 
     declarations: [
+        NavbarComponent,
 
         AccesoDenegadoComponent,
 
@@ -30,6 +34,7 @@ import {
     ],
 
     imports: [
+        MercuryModalComponent,
 
         CommonModule,
 
@@ -38,6 +43,8 @@ import {
     ],
 
     exports: [
+        NavbarComponent,
+        MercuryModalComponent,
 
         AccesoDenegadoComponent,
 

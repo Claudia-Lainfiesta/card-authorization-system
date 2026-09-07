@@ -1,0 +1,113 @@
+<nav class="mercury-nav flex flex-wrap items-center" aria-label="Navegación principal">
+  <a class="mercury-brand" [routerLink]="inicio" aria-label="Mercury, ir al inicio">
+    <img src="mercury.svg" width="26" height="26" alt="" aria-hidden="true" />MERCURY
+  </a>
+  <a
+    [routerLink]="admin ? '/admin' : '/cliente'"
+    routerLinkActive="mercury-button"
+    #enlace0="routerLinkActive"
+    [routerLinkActiveOptions]="{ exact: true }"
+    class="px-4 py-2"
+    [ngClass]="enlace0.isActive ? '' : 'rounded-lg text-neutral-300 hover:bg-neutral-800'"
+    >Inicio</a
+  >
+  <a
+    [routerLink]="admin ? '/admin/tarjetas' : '/cliente/tarjetas'"
+    routerLinkActive="mercury-button"
+    #enlace1="routerLinkActive"
+    class="px-4 py-2"
+    [ngClass]="enlace1.isActive ? '' : 'rounded-lg text-neutral-300 hover:bg-neutral-800'"
+    >{{ admin ? 'Tarjetas' : 'Mis tarjetas' }}</a
+  >
+  <ng-container *ngIf="admin; else cliente">
+    <a
+      routerLink="/admin/usuarios"
+      routerLinkActive="mercury-button"
+      #enlace2="routerLinkActive"
+      class="px-4 py-2"
+      [ngClass]="enlace2.isActive ? '' : 'rounded-lg text-neutral-300 hover:bg-neutral-800'"
+      >Usuarios</a
+    >
+    <a
+      routerLink="/admin/pagos"
+      routerLinkActive="mercury-button"
+      #enlace3="routerLinkActive"
+      class="px-4 py-2"
+      [ngClass]="enlace3.isActive ? '' : 'rounded-lg text-neutral-300 hover:bg-neutral-800'"
+      >Pagos</a
+    >
+    <a
+      routerLink="/admin/bitacora"
+      routerLinkActive="mercury-button"
+      #enlace4="routerLinkActive"
+      class="px-4 py-2"
+      [ngClass]="enlace4.isActive ? '' : 'rounded-lg text-neutral-300 hover:bg-neutral-800'"
+      >Bitácora</a
+    >
+  </ng-container>
+  <ng-template #cliente
+    ><a
+      routerLink="/cliente/historial"
+      routerLinkActive="mercury-button"
+      #enlace5="routerLinkActive"
+      class="px-4 py-2"
+      [ngClass]="enlace5.isActive ? '' : 'rounded-lg text-neutral-300 hover:bg-neutral-800'"
+      >Mi historial</a
+    ></ng-template
+  >
+  <div class="ml-auto flex flex-wrap items-center gap-3">
+    <button
+      type="button"
+      class="mercury-secondary inline-flex items-center gap-3 px-3 py-2"
+      (click)="abrirPerfil()"
+      aria-haspopup="dialog"
+      [attr.aria-expanded]="perfilAbierto"
+    >
+      <span class="font-mono text-sm" aria-hidden="true">{{ iniciales }}</span>
+      <span class="text-left"
+        ><span class="block text-sm">{{ usuario?.nombre_completo || 'Mi cuenta' }}</span
+        ><span class="block text-xs text-neutral-400">{{
+          admin ? 'Administrador' : 'Cliente'
+        }}</span></span
+      >
+    </button>
+    <app-logout-button></app-logout-button>
+  </div>
+</nav>
+<app-mercury-modal *ngIf="perfilAbierto" titulo="Mi cuenta" (cerrar)="perfilAbierto = false">
+  <p *ngIf="cargando" role="status" class="mb-5 text-sm text-neutral-400">Actualizando perfil...</p>
+  <div
+    *ngIf="error"
+    role="alert"
+    class="mb-5 rounded-lg border border-red-800 bg-red-950 p-3 text-red-300"
+  >
+    {{ error }}
+    <button type="button" class="mercury-secondary px-4 py-2" (click)="cargarPerfil()">
+      Reintentar
+    </button>
+  </div>
+  <dl *ngIf="usuario" class="space-y-5">
+    <div>
+      <dt class="text-sm text-neutral-400">Nombre completo</dt>
+      <dd class="mt-1 text-white">{{ usuario.nombre_completo }}</dd>
+    </div>
+    <div>
+      <dt class="text-sm text-neutral-400">Correo</dt>
+      <dd class="mt-1 break-all text-white">{{ usuario.correo }}</dd>
+    </div>
+    <div>
+      <dt class="text-sm text-neutral-400">Rol</dt>
+      <dd class="mt-1">
+        <span class="mercury-badge">{{ admin ? 'Administrador' : 'Cliente' }}</span>
+      </dd>
+    </div>
+    <div>
+      <dt class="text-sm text-neutral-400">Estado de la cuenta</dt>
+      <dd class="mt-1">
+        <span class="mercury-badge" [attr.data-status]="usuario.activo">{{
+          usuario.activo === undefined ? 'No disponible' : usuario.activo ? 'Activo' : 'Inactivo'
+        }}</span>
+      </dd>
+    </div>
+  </dl>
+</app-mercury-modal>

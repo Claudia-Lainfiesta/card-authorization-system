@@ -1,4 +1,5 @@
 import { NgModule } from '@angular/core';
+import { GestionPagosComponent } from './gestion-pagos/gestion-pagos.component';
 
 import { CommonModule } from '@angular/common';
 
@@ -23,7 +24,7 @@ import {
 } from './components/admin-controls';
 
 @NgModule({
-  declarations: [AdminDashboardComponent, GestionTarjetasComponent, GestionUsuariosComponent],
+  declarations: [AdminDashboardComponent, GestionTarjetasComponent, GestionUsuariosComponent, GestionPagosComponent],
 
   imports: [
     CommonModule,

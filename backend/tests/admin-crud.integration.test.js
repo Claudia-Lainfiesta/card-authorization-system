@@ -27,11 +27,15 @@ test('CRUD y reportes administrativos con PostgreSQL', { skip: process.env.RUN_D
         CREATE TEMP TABLE emisores (id_emisor CHAR(15) PRIMARY KEY, nombre TEXT, activo BOOLEAN DEFAULT TRUE);
         CREATE TEMP TABLE tarjetas (
             id_tarjeta SERIAL PRIMARY KEY, numero_tarjeta CHAR(16) UNIQUE NOT NULL,
-            nombre_titular TEXT, cvv_hash TEXT, fecha_vencimiento CHAR(6),
+            nombre_titular TEXT, cvv_hash TEXT, cvv_cifrado TEXT, fecha_vencimiento CHAR(6),
             monto_autorizado NUMERIC(12,2), monto_disponible NUMERIC(12,2),
             id_usuario INTEGER REFERENCES usuarios(id_usuario), id_emisor CHAR(15) REFERENCES emisores(id_emisor),
             estado TEXT, fecha_creacion TIMESTAMP DEFAULT NOW(), fecha_actualizacion TIMESTAMP DEFAULT NOW(),
             favorita BOOLEAN NOT NULL DEFAULT FALSE
+        );
+        CREATE TEMP TABLE transacciones (
+            id_transaccion SERIAL PRIMARY KEY, id_tarjeta INTEGER REFERENCES tarjetas(id_tarjeta),
+            tipo TEXT, monto NUMERIC(12,2), comercio TEXT, estado TEXT, fecha TIMESTAMP DEFAULT NOW()
         );
         CREATE TEMP TABLE autorizaciones (
             id_autorizacion SERIAL PRIMARY KEY, fecha TEXT, hora TEXT, tienda TEXT, monto NUMERIC(12,2), status TEXT
@@ -40,7 +44,7 @@ test('CRUD y reportes administrativos con PostgreSQL', { skip: process.env.RUN_D
         INSERT INTO usuarios(nombre_completo,correo,password_hash,id_rol) VALUES
             ('Administrador de prueba','admin@example.test','hash de prueba',1),
             ('Cliente de prueba','cliente@example.test','hash de prueba',2);
-        INSERT INTO emisores(id_emisor,nombre) VALUES ('BANCO-PRUEBA-01','Emisor de prueba');
+        INSERT INTO emisores(id_emisor,nombre) VALUES ('MERCURY00000001','Mercury');
     `);
     const raiz = path.resolve(__dirname, '../src');
     const cache = new Map();
@@ -67,6 +71,8 @@ test('CRUD y reportes administrativos con PostgreSQL', { skip: process.env.RUN_D
         tarjetas: cargar(path.join(raiz, 'modules/tarjetas/tarjetas.routes.js')),
         reportes: cargar(path.join(raiz, 'modules/reportes/reportes.routes.js')),
         bitacora: cargar(path.join(raiz, 'modules/autorizaciones/bitacora.routes.js')),
+        transacciones: cargar(path.join(raiz, 'modules/transacciones/transacciones.routes.js')),
+        auth: cargar(path.join(raiz, 'modules/auth/auth.routes.js')),
         emisores: cargar(path.join(raiz, 'modules/emisores/emisores.routes.js'))
     };
     function pedir(modulo, method, url, body, usuario = 1, query = {}) {
@@ -74,8 +80,10 @@ test('CRUD y reportes administrativos con PostgreSQL', { skip: process.env.RUN_D
             const req = { method, url, body, query, headers: usuario ? { authorization: `Bearer sesion-${usuario}` } : {} };
             const res = {
                 statusCode: 200,
+                headers: {},
+                set(name, value) { this.headers[name] = value; return this; },
                 status(code) { this.statusCode = code; return this; },
-                json(body) { resolve({ status: this.statusCode, body }); return this; }
+                json(body) { resolve({ status: this.statusCode, body, headers: this.headers }); return this; }
             };
             routers[modulo].handle(req, res, error => {
                 if (error) resolve({ status: error.statusCode || 500, body: { error: error.message } });
@@ -86,9 +94,9 @@ test('CRUD y reportes administrativos con PostgreSQL', { skip: process.env.RUN_D
     let nuevoUsuario;
     let tarjetaId;
     const datosTarjeta = {
-        numero_tarjeta: '4000000000001234', nombre_titular: 'Titular de prueba', cvv: '123',
+        nombre_titular: 'Titular de prueba', cvv: '123',
         fecha_vencimiento: '203012', monto_autorizado: 1000, monto_disponible: 700,
-        id_usuario: 2, id_emisor: 'BANCO-PRUEBA-01', estado: 'ACTIVA'
+        id_usuario: 2, id_emisor: 'MERCURY00000001', estado: 'ACTIVA'
     };
     await t.test('rutas restringidas al administrador actual', async () => {
         for (const [modulo, url] of [['usuarios','/'], ['tarjetas','/'], ['reportes','/resumen'], ['bitacora','/bitacora'], ['emisores','/']]) {
@@ -144,7 +152,54 @@ test('CRUD y reportes administrativos con PostgreSQL', { skip: process.env.RUN_D
         assert.notEqual(r.body.tarjeta.numero_tarjeta, datosTarjeta.numero_tarjeta);
         assert.equal('cvv' in r.body.tarjeta, false);
         assert.equal('cvv_hash' in r.body.tarjeta, false);
-        assert.equal((await pedir('tarjetas', 'POST', '/', datosTarjeta)).status, 409);
+        assert.equal((await pedir('tarjetas', 'POST', '/', { ...datosTarjeta, numero_tarjeta: '4000000000001234' })).status, 400);
+    });
+    await t.test('Mercury, fechas, datos propios sin caché y búsqueda protegida', async () => {
+        const raw = (await client.query('SELECT numero_tarjeta,cvv_cifrado FROM tarjetas WHERE id_tarjeta=$1', [tarjetaId])).rows[0];
+        assert.match(raw.numero_tarjeta, /^4[0-9]{15}$/);
+        assert.ok(raw.cvv_cifrado.startsWith('v1.'));
+        assert.equal((await pedir('tarjetas', 'POST', `/${tarjetaId}/revelar`, {}, null)).status, 401);
+        assert.equal((await pedir('tarjetas', 'POST', `/${tarjetaId}/revelar`, {}, 1)).status, 403);
+        assert.equal((await pedir('tarjetas', 'POST', `/${tarjetaId}/revelar`, {}, nuevoUsuario)).status, 404);
+        let r = await pedir('tarjetas', 'POST', `/${tarjetaId}/revelar`, {}, 2);
+        assert.equal(r.status, 200);
+        assert.equal(r.headers['Cache-Control'], 'no-store, private');
+        assert.equal(r.body.tarjeta.cvv, '123');
+        assert.ok(r.body.tarjeta.numero_tarjeta === raw.numero_tarjeta);
+        r = await pedir('tarjetas', 'POST', '/buscar', { busqueda: raw.numero_tarjeta });
+        assert.equal(r.body.tarjetas.length, 1);
+        assert.ok(r.body.tarjetas[0].numero_tarjeta !== raw.numero_tarjeta);
+        assert.equal('cvv_cifrado' in r.body.tarjetas[0], false);
+        assert.equal((await pedir('tarjetas', 'POST', '/buscar', { busqueda: 'Cliente de prueba' })).body.tarjetas.length, 1);
+        assert.equal((await pedir('tarjetas', 'POST', '/buscar', { busqueda: 'Cliente' }, 2)).status, 403);
+        r = await pedir('tarjetas', 'PUT', `/${tarjetaId}`, { fecha_vencimiento: '05/2028' });
+        assert.equal(r.body.tarjeta.fecha_vencimiento, '202805');
+        assert.equal((await pedir('tarjetas', 'PUT', `/${tarjetaId}`, { id_emisor: 'OTRO' })).status, 400);
+        const perfil = await pedir('auth', 'GET', '/me', undefined, 2);
+        assert.equal(perfil.status, 200);
+        assert.equal(perfil.body.usuario.correo, 'cliente@example.test');
+        assert.equal('password_hash' in perfil.body.usuario, false);
+        await client.query('UPDATE tarjetas SET cvv_cifrado=NULL WHERE id_tarjeta=$1', [tarjetaId]);
+        r = await pedir('tarjetas', 'POST', `/${tarjetaId}/revelar`, {}, 2);
+        assert.equal(r.body.tarjeta.cvv, null);
+    });
+    await t.test('pago atómico con centavos, validación de saldo y permisos', async () => {
+        const creada = await pedir('tarjetas', 'POST', '/', { ...datosTarjeta, monto_autorizado: 0.3, monto_disponible: 0.1 });
+        assert.equal(creada.status, 201);
+        const id = creada.body.tarjeta.id_tarjeta;
+        const pago = { id_tarjeta: id, tipo: 'PAGO', monto: 0.2, comercio: 'Pago recibido' };
+        assert.equal((await pedir('transacciones', 'POST', '/', pago, 2)).status, 403);
+        assert.equal((await pedir('transacciones', 'POST', '/', { ...pago, monto: 0.001 })).status, 400);
+        const r = await pedir('transacciones', 'POST', '/', pago);
+        assert.equal(r.status, 201);
+        assert.equal(r.body.transaccion.saldo_nuevo, 0.3);
+        assert.ok(r.body.transaccion.fecha);
+        assert.equal((await pedir('transacciones', 'POST', '/', { ...pago, monto: 0.01 })).status, 400);
+        assert.equal(Number((await client.query('SELECT monto_disponible FROM tarjetas WHERE id_tarjeta=$1', [id])).rows[0].monto_disponible), 0.3);
+        assert.equal((await client.query('SELECT * FROM transacciones WHERE id_tarjeta=$1', [id])).rows.length, 1);
+        // No deja tarjetas adicionales para los escenarios de cancelación posteriores.
+        await client.query('DELETE FROM transacciones WHERE id_tarjeta=$1', [id]);
+        await client.query('DELETE FROM tarjetas WHERE id_tarjeta=$1', [id]);
     });
     await t.test('edición conserva utilizado y CVV cuando no se proporciona uno nuevo', async () => {
         const hash = (await client.query('SELECT cvv_hash FROM tarjetas WHERE id_tarjeta=$1', [tarjetaId])).rows[0].cvv_hash;
@@ -168,7 +223,7 @@ test('CRUD y reportes administrativos con PostgreSQL', { skip: process.env.RUN_D
         assert.equal((await client.query('SELECT favorita FROM tarjetas WHERE id_tarjeta=$1', [tarjetaId])).rows[0].favorita, false);
     });
     await t.test('eliminar desactiva la cuenta, cancela tarjetas y conserva propietarios', async () => {
-        await pedir('tarjetas', 'POST', '/', { ...datosTarjeta, numero_tarjeta: '4000000000005678', id_usuario: nuevoUsuario });
+        await pedir('tarjetas', 'POST', '/', { ...datosTarjeta, id_usuario: nuevoUsuario });
         const r = await pedir('usuarios', 'DELETE', `/${nuevoUsuario}`);
         assert.equal(r.status, 200);
         assert.equal(r.body.tarjetas_canceladas, 1);
@@ -179,7 +234,7 @@ test('CRUD y reportes administrativos con PostgreSQL', { skip: process.env.RUN_D
         assert.equal((await pedir('tarjetas', 'PUT', `/${tarjetaId}`, { estado: 'ACTIVA' })).status, 400);
     });
     await t.test('revierte la desactivación si falla la cancelación de tarjetas', async () => {
-        await pedir('tarjetas', 'POST', '/', { ...datosTarjeta, numero_tarjeta: '4000000000009012' });
+        await pedir('tarjetas', 'POST', '/', { ...datosTarjeta });
         await client.query(`CREATE FUNCTION pg_temp.fallar_cancelacion() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'fallo de prueba'; END $$;
             CREATE TRIGGER fallo_prueba BEFORE UPDATE ON tarjetas FOR EACH ROW EXECUTE FUNCTION pg_temp.fallar_cancelacion();`);
         assert.equal((await pedir('usuarios', 'DELETE', '/2')).status, 500);

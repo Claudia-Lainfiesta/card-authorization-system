@@ -1,8 +1,8 @@
 # Panel de administración
 
-El módulo conserva el tema Mercury. El cliente y los estilos globales no se
-modifican. No requiere migraciones: usa las tablas y columnas existentes,
-incluida la migración de favoritas que ya estaba aplicada.
+El módulo conserva el tema Mercury. La ampliación de tarjetas, pagos y navegación
+está documentada en [Mercury](mercury-tarjetas-pagos.md) y requiere la migración 002.
+Los estilos globales se conservan.
 
 ## Interfaz y archivos
 
@@ -43,10 +43,10 @@ Todos requieren el rol actual `ADMINISTRADOR`.
 | --- | --- |
 | `GET /api/v1/reportes/resumen` | Nuevo; tarjetas activas, usuarios registrados, autorizaciones de hoy y tasa de aprobación. Sin autorizaciones del día, la tasa es 0. |
 | `GET /api/v1/autorizaciones/bitacora?limit=10&pagina=1` | Nuevo; total y página, ordenada por fecha, hora e ID descendentes; límite de 1 a 100. |
-| `GET /api/v1/emisores` | Nuevo; catálogo para los selectores. |
+| `GET /api/v1/emisores` | Catálogo restringido al emisor Mercury. |
 | `GET /api/v1/tarjetas` | Existente; listado enmascarado. |
-| `POST /api/v1/tarjetas` | Existente; validación reforzada de montos y propietario activo. |
-| `PUT /api/v1/tarjetas/:id` | Ampliado; titular, número nuevo opcional, vencimiento, CVV nuevo opcional, emisor, propietario, límite y estado. |
+| `POST /api/v1/tarjetas` | Genera PAN único con prefijo 4; emisor Mercury, montos y propietario activo validados. |
+| `PUT /api/v1/tarjetas/:id` | Titular, vencimiento, CVV nuevo opcional, propietario, límite y estado. PAN inmutable y emisor Mercury. |
 | `DELETE /api/v1/tarjetas/:id` | Existente; cambia a CANCELADA y conserva el historial. |
 | `GET /api/v1/usuarios` | Existente. |
 | `POST /api/v1/usuarios` | Nuevo; nombre, correo, contraseña inicial y rol. |
@@ -66,9 +66,10 @@ comparte el manejo transaccional en `src/utils/transaction.js`.
 
 ## Reglas de datos y permisos
 
-- La edición no recupera PAN ni CVV. Conservar el número enmascarado omite ese
-  campo del PUT; dejar el CVV vacío conserva su hash. Las respuestas no exponen
-  el PAN, el CVV ni hashes de contraseña.
+- La edición no recupera PAN ni CVV. El PAN no se envía en el PUT; dejar el CVV
+  vacío conserva su hash y cifrado. Las respuestas administrativas no exponen
+  el PAN, el CVV ni hashes de contraseña. El cliente dispone de una ruta separada
+  para revelar exclusivamente sus propias tarjetas.
 - En creación, la interfaz inicializa el disponible con el monto autorizado.
   Al editar el límite, el backend bloquea la tarjeta y conserva el utilizado:
   `nuevo disponible = nuevo autorizado - utilizado actual`. Rechaza límites

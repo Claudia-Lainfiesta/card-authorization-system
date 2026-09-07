@@ -88,6 +88,14 @@ export class AuthService {
 
     }
 
+    perfil(): Observable<{ usuario: Usuario }> {
+        return this.http.get<{ usuario: Usuario }>(`${this.apiUrl}/me`).pipe(
+            tap(({ usuario }) => {
+                if (this.esNavegador) sessionStorage.setItem('usuario', JSON.stringify(usuario));
+            })
+        );
+    }
+
 
     registro(
         nombreCompleto: string,

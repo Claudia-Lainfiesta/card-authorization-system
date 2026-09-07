@@ -21,6 +21,8 @@ const crearTransaccionSchema =
 
         monto:
             z.number()
+                .max(9999999999.99)
+                .multipleOf(0.01)
                 .positive(
                     'El monto debe ser mayor que cero'
                 ),

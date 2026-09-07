@@ -1,25 +1,6 @@
 <div class="mercury-bg mercury-shell">
   <div class="mx-auto max-w-7xl">
-    <nav class="mercury-nav flex flex-wrap items-center" aria-label="Navegación principal">
-      <span class="mercury-brand"
-        ><span class="mercury-mark" aria-hidden="true"></span>MERCURY</span
-      >
-      <a routerLink="/admin" class="rounded-lg px-4 py-2 text-neutral-300 hover:bg-neutral-800"
-        >Inicio</a
-      >
-      <a
-        routerLink="/admin/tarjetas"
-        class="rounded-lg px-4 py-2 text-neutral-300 hover:bg-neutral-800"
-        >Tarjetas</a
-      >
-      <a routerLink="/admin/usuarios" class="mercury-button px-4 py-2">Usuarios</a>
-      <a
-        routerLink="/admin/bitacora"
-        class="rounded-lg px-4 py-2 text-neutral-300 hover:bg-neutral-800"
-        >Bitácora</a
-      >
-      <div class="ml-auto"><app-logout-button></app-logout-button></div>
-    </nav>
+    <app-navbar></app-navbar>
 
     <div class="mb-8 flex flex-wrap items-center justify-between gap-5">
       <div>
@@ -159,7 +140,7 @@
         (cambiar)="pagina = $event"
       ></app-admin-paginacion>
     </ng-container>
-    <app-admin-modal
+    <app-mercury-modal
       *ngIf="mostrandoFormulario"
       [titulo]="usuarioEditando ? 'Editar usuario' : 'Nuevo usuario'"
       [ocupado]="guardando"
@@ -273,8 +254,8 @@
           </button>
         </div>
       </form>
-    </app-admin-modal>
-    <app-admin-modal
+    </app-mercury-modal>
+    <app-mercury-modal
       *ngIf="usuarioEliminando"
       titulo="Eliminar usuario"
       [ocupado]="guardando"
@@ -303,6 +284,6 @@
           {{ guardando ? 'Eliminando...' : 'Confirmar eliminación' }}
         </button>
       </div>
-    </app-admin-modal>
+    </app-mercury-modal>
   </div>
 </div>

@@ -1,0 +1,146 @@
+<div class="mercury-bg mercury-shell">
+  <div class="mx-auto max-w-7xl">
+    <app-navbar></app-navbar>
+    <h1 class="text-3xl font-medium text-white">Pagos</h1>
+    <p class="mt-2 text-neutral-400">
+      Registra abonos al saldo de las tarjetas. Procesamiento bancario simulado.
+    </p>
+    <section class="mercury-surface mt-8 p-6">
+      <label for="buscar-tarjeta" class="mb-2 block text-sm text-neutral-300"
+        >Buscar por número de tarjeta o nombre del cliente</label
+      >
+      <input
+        id="buscar-tarjeta"
+        class="w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-white disabled:opacity-50"
+        type="search"
+        autocomplete="off"
+        maxlength="120"
+        [formControl]="busqueda"
+        placeholder="Escribe un número o nombre"
+      />
+      <div class="mt-5"><app-admin-mensaje [error]="errorBusqueda"></app-admin-mensaje></div>
+      <p *ngIf="buscando" role="status" class="text-neutral-400">Buscando tarjetas...</p>
+      <p
+        *ngIf="!buscando && busquedaRealizada && !errorBusqueda && !resultados.length"
+        class="text-neutral-500"
+      >
+        No se encontraron tarjetas con esta búsqueda.
+      </p>
+      <div *ngIf="resultados.length" class="mercury-table overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead class="border-b border-neutral-800 text-neutral-400">
+            <tr>
+              <th class="px-4 py-3">Tarjeta</th>
+              <th class="px-4 py-3">Titular</th>
+              <th class="px-4 py-3">Estado</th>
+              <th class="px-4 py-3"><span class="sr-only">Acciones</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let tarjeta of resultados" class="border-b border-neutral-800">
+              <td class="px-4 py-4 font-mono text-white">
+                {{ panel.numeroEnmascarado(tarjeta.numero_tarjeta) }}
+              </td>
+              <td class="px-4 py-4 text-neutral-300">
+                {{ tarjeta.nombre_titular
+                }}<span
+                  *ngIf="tarjeta.propietario && tarjeta.propietario !== tarjeta.nombre_titular"
+                  class="mt-1 block text-xs text-neutral-500"
+                  >Cliente: {{ tarjeta.propietario }}</span
+                >
+              </td>
+              <td class="px-4 py-4">
+                <span class="mercury-badge" [ngStyle]="panel.estiloEstado(tarjeta.estado)">{{
+                  tarjeta.estado
+                }}</span>
+              </td>
+              <td class="px-4 py-4">
+                <button
+                  class="mercury-secondary px-4 py-2 disabled:opacity-50"
+                  type="button"
+                  [disabled]="guardando"
+                  (click)="seleccionar(tarjeta)"
+                >
+                  {{
+                    seleccionada?.id_tarjeta === tarjeta.id_tarjeta ? 'Seleccionada' : 'Seleccionar'
+                  }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p *ngIf="resultados.length === 20" class="mt-3 text-sm text-neutral-400">
+          Se muestran hasta 20 tarjetas. Precisa la búsqueda para encontrar otra tarjeta.
+        </p>
+      </div>
+    </section>
+    <section *ngIf="seleccionada as tarjeta" class="mercury-surface mt-6 p-6">
+      <h2 class="text-xl font-medium text-white">Registrar pago</h2>
+      <p class="mt-2 text-neutral-400">
+        {{ tarjeta.nombre_titular }} · {{ panel.numeroEnmascarado(tarjeta.numero_tarjeta) }}
+      </p>
+      <dl class="my-6 grid gap-5 sm:grid-cols-3">
+        <div>
+          <dt class="text-sm text-neutral-400">Saldo adeudado</dt>
+          <dd class="mt-2 text-xl text-white">Q {{ deuda | number: '1.2-2' }}</dd>
+        </div>
+        <div>
+          <dt class="text-sm text-neutral-400">Disponible</dt>
+          <dd class="mt-2 text-xl text-white">
+            Q {{ tarjeta.monto_disponible | number: '1.2-2' }}
+          </dd>
+        </div>
+        <div>
+          <dt class="text-sm text-neutral-400">Monto autorizado</dt>
+          <dd class="mt-2 text-xl text-white">
+            Q {{ tarjeta.monto_autorizado | number: '1.2-2' }}
+          </dd>
+        </div>
+      </dl>
+      <app-admin-mensaje [error]="error" [mensaje]="mensaje"></app-admin-mensaje>
+      <p *ngIf="comprobante as pago" class="mb-5 text-sm text-neutral-300">
+        Pago #{{ pago.id_transaccion }} · {{ pago.fecha | date: 'dd/MM/yyyy HH:mm' }} · Q
+        {{ pago.monto | number: '1.2-2' }}
+      </p>
+      <p *ngIf="tarjeta.estado === 'CANCELADA'" class="text-neutral-400">
+        No se pueden registrar pagos en una tarjeta cancelada.
+      </p>
+      <p *ngIf="!deuda && tarjeta.estado !== 'CANCELADA'" class="text-neutral-400">
+        Esta tarjeta no tiene saldo adeudado.
+      </p>
+      <form
+        *ngIf="deuda > 0 && tarjeta.estado !== 'CANCELADA'"
+        [formGroup]="formulario"
+        (ngSubmit)="registrarPago()"
+      >
+        <fieldset [disabled]="guardando" class="space-y-5">
+          <div>
+            <label for="monto-pago" class="mb-2 block text-sm text-neutral-300"
+              >Monto del pago (Q)</label
+            >
+            <input
+              id="monto-pago"
+              type="number"
+              min="0.01"
+              [max]="deuda"
+              step="0.01"
+              class="w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-white disabled:opacity-50"
+              formControlName="monto"
+            />
+            <app-admin-error-campo
+              [control]="monto"
+              mensaje="Ingresa un monto positivo con hasta dos decimales que no supere el saldo adeudado."
+            ></app-admin-error-campo>
+          </div>
+          <button
+            type="submit"
+            class="mercury-button px-5 py-2 disabled:opacity-50"
+            [disabled]="guardando"
+          >
+            {{ guardando ? 'Procesando pago...' : 'Registrar pago' }}
+          </button>
+        </fieldset>
+      </form>
+    </section>
+  </div>
+</div>

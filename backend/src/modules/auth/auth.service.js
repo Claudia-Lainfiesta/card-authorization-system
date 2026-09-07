@@ -271,7 +271,15 @@ const refrescarSesion = async (
 };
 
 
+const perfil = async (idUsuario) => {
+    const usuario = await usuariosRepository.buscarPorId(idUsuario);
+    if (!usuario) throw crearError('Usuario no encontrado', 404);
+    return { id_usuario: usuario.id_usuario, nombre_completo: usuario.nombre_completo,
+        correo: usuario.correo, rol: usuario.rol, activo: usuario.activo };
+};
+
 module.exports = {
+    perfil,
     registrar,
     login,
     refrescarSesion

@@ -1,9 +1,17 @@
-import { ChangeDetectorRef, Component, DestroyRef, inject, OnInit } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  DestroyRef,
+  HostListener,
+  inject,
+  OnInit,
+} from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import { TarjetasService } from '../../core/services/tarjetas.service';
 import { PanelClienteService } from '../../core/services/panel-cliente.service';
-import { Tarjeta } from '../../core/models/tarjeta.model';
+import { DatosTarjetaRevelados, Tarjeta } from '../../core/models/tarjeta.model';
 
 interface SeccionTarjetas {
   titulo: string;
@@ -26,6 +34,68 @@ export class MisTarjetasComponent implements OnInit {
   error = '';
   readonly guardandoFavoritas = new Set<number>();
   readonly erroresFavoritas = new Map<number, string>();
+  readonly reveladas = new Map<number, DatosTarjetaRevelados>();
+  readonly revelando = new Set<number>();
+  readonly erroresVisibilidad = new Map<number, string>();
+  private documento = inject(DOCUMENT);
+  private generacionVisibilidad = 0;
+
+  constructor() {
+    this.destroyRef.onDestroy(() => this.ocultarDatos());
+  }
+
+  @HostListener('document:visibilitychange')
+  cambioVisibilidad(): void {
+    if (this.documento.hidden) this.ocultarDatos();
+  }
+
+  private ocultarDatos(): void {
+    this.generacionVisibilidad++;
+    this.reveladas.clear();
+  }
+
+  numeroVisible(tarjeta: Tarjeta): string {
+    const datos = this.reveladas.get(tarjeta.id_tarjeta);
+    return datos
+      ? datos.numero_tarjeta.replace(/(.{4})(?=.)/g, '$1 ')
+      : '**** **** **** ' + tarjeta.numero_tarjeta.slice(-4);
+  }
+
+  alternarVisibilidad(tarjeta: Tarjeta): void {
+    const id = tarjeta.id_tarjeta;
+    if (this.revelando.has(id)) return;
+    this.erroresVisibilidad.delete(id);
+    if (this.reveladas.has(id)) {
+      this.reveladas.delete(id);
+      return;
+    }
+    const generacion = this.generacionVisibilidad;
+    this.revelando.add(id);
+    this.tarjetasService
+      .revelar(id)
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => {
+          this.revelando.delete(id);
+          this.cdr.markForCheck();
+        }),
+      )
+      .subscribe({
+        next: (r) => {
+          if (generacion === this.generacionVisibilidad && !this.documento.hidden) {
+            this.reveladas.set(id, r.tarjeta);
+            this.cdr.markForCheck();
+          }
+        },
+        error: () => {
+          this.erroresVisibilidad.set(
+            id,
+            'No fue posible mostrar los datos de la tarjeta. Inténtalo de nuevo.',
+          );
+          this.cdr.markForCheck();
+        },
+      });
+  }
 
   get secciones(): SeccionTarjetas[] {
     const favoritas = this.tarjetas.filter((tarjeta) => tarjeta.favorita);

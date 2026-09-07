@@ -1,30 +1,6 @@
 <div class="mercury-bg mercury-shell">
   <div class="mx-auto max-w-7xl">
-    <nav class="mercury-nav flex flex-wrap items-center" aria-label="Navegación principal">
-      <span class="mercury-brand"
-        ><span class="mercury-mark" aria-hidden="true"></span>MERCURY</span
-      >
-
-      <a routerLink="/cliente" class="mercury-button px-4 py-2"> Inicio </a>
-
-      <a
-        routerLink="/cliente/tarjetas"
-        class="rounded-lg px-4 py-2 text-neutral-300 hover:bg-neutral-800"
-      >
-        Mis tarjetas
-      </a>
-
-      <a
-        routerLink="/cliente/historial"
-        class="rounded-lg px-4 py-2 text-neutral-300 hover:bg-neutral-800"
-      >
-        Mi historial
-      </a>
-
-      <div class="ml-auto">
-        <app-logout-button></app-logout-button>
-      </div>
-    </nav>
+    <app-navbar></app-navbar>
     <div class="mb-8">
       <p class="font-mono text-xs uppercase tracking-[0.2em] text-neutral-400">Cliente</p>
       <h1 class="mt-2 text-3xl font-medium sm:text-4xl text-white">{{ saludo }}, {{ nombre }}</h1>

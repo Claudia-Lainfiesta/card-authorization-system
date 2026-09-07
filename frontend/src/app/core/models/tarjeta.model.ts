@@ -32,7 +32,6 @@ export interface Tarjeta {
 }
 
 export interface CrearTarjetaRequest {
-  numero_tarjeta: string;
 
   nombre_titular: string;
 
@@ -46,18 +45,17 @@ export interface CrearTarjetaRequest {
 
   id_usuario: number;
 
-  id_emisor: string;
+  id_emisor?: 'MERCURY00000001';
 
   estado: EstadoTarjeta;
 }
 
 export interface ActualizarTarjetaRequest {
-  numero_tarjeta?: string;
   nombre_titular?: string;
   fecha_vencimiento?: string;
   cvv?: string;
   id_usuario?: number;
-  id_emisor?: string;
+  id_emisor?: 'MERCURY00000001';
 
   monto_autorizado?: number;
 
@@ -86,4 +84,10 @@ export interface FavoritaResponse {
     id_tarjeta: number;
     favorita: boolean;
   };
+}
+
+export interface DatosTarjetaRevelados {
+  id_tarjeta: number;
+  numero_tarjeta: string;
+  cvv: string | null;
 }

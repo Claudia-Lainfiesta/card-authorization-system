@@ -19,6 +19,8 @@ const {
 const router =
     express.Router();
 
+router.get('/me', require('../../middlewares/auth.middleware'), authController.perfil);
+
 
 router.post(
     '/registro',

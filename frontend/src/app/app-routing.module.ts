@@ -31,6 +31,7 @@ import {
 
 
 const routes: Routes = [
+    { path: 'dashboard', pathMatch: 'full', redirectTo: 'cliente' },
 
     {
         path: '',

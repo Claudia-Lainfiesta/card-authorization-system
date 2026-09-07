@@ -1,27 +1,6 @@
 <div class="mercury-bg mercury-shell">
   <div class="mx-auto max-w-7xl">
-    <nav class="mercury-nav flex flex-wrap items-center" aria-label="Navegación principal">
-      <span class="mercury-brand"
-        ><span class="mercury-mark" aria-hidden="true"></span>MERCURY</span
-      >
-
-      <a routerLink="/cliente" class="rounded-lg px-4 py-2 text-neutral-300 hover:bg-neutral-800">
-        Inicio
-      </a>
-
-      <a routerLink="/cliente/tarjetas" class="mercury-button px-4 py-2"> Mis tarjetas </a>
-
-      <a
-        routerLink="/cliente/historial"
-        class="rounded-lg px-4 py-2 text-neutral-300 hover:bg-neutral-800"
-      >
-        Mi historial
-      </a>
-
-      <div class="ml-auto">
-        <app-logout-button></app-logout-button>
-      </div>
-    </nav>
+    <app-navbar></app-navbar>
 
     <h1 class="text-3xl font-medium text-white">Mis tarjetas</h1>
 
@@ -68,7 +47,50 @@
             *ngFor="let tarjeta of seccion.tarjetas; trackBy: identificarTarjeta"
             class="mercury-surface card-panel"
           >
-            <div class="mb-3 flex justify-end">
+            <div class="mb-3 flex justify-end gap-3">
+              <button
+                type="button"
+                class="mercury-secondary inline-flex h-11 w-11 items-center justify-center disabled:opacity-50"
+                [class.text-emerald-400]="reveladas.has(tarjeta.id_tarjeta)"
+                [disabled]="revelando.has(tarjeta.id_tarjeta)"
+                [attr.aria-busy]="revelando.has(tarjeta.id_tarjeta)"
+                [attr.aria-pressed]="reveladas.has(tarjeta.id_tarjeta)"
+                [attr.aria-label]="
+                  (reveladas.has(tarjeta.id_tarjeta)
+                    ? 'Ocultar datos de la tarjeta '
+                    : 'Mostrar datos de la tarjeta ') +
+                  panel.tarjetaResumida(tarjeta.numero_tarjeta)
+                "
+                [title]="
+                  revelando.has(tarjeta.id_tarjeta)
+                    ? 'Cargando datos...'
+                    : reveladas.has(tarjeta.id_tarjeta)
+                      ? 'Ocultar datos'
+                      : 'Mostrar datos'
+                "
+                (click)="alternarVisibilidad(tarjeta)"
+              >
+                <span
+                  *ngIf="revelando.has(tarjeta.id_tarjeta); else ojo"
+                  class="h-4 w-4 animate-spin rounded-full border-2 border-neutral-700 border-t-neutral-300"
+                  aria-hidden="true"
+                ></span>
+                <ng-template #ojo
+                  ><svg
+                    class="h-5 w-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path *ngIf="reveladas.has(tarjeta.id_tarjeta)" d="m3 3 18 18"></path></svg
+                ></ng-template>
+              </button>
               <button
                 type="button"
                 class="mercury-secondary inline-flex h-11 w-11 items-center justify-center disabled:opacity-50"
@@ -136,7 +158,7 @@
                   </div>
 
                   <div class="card-number">
-                    {{ panel.numeroEnmascarado(tarjeta.numero_tarjeta) }}
+                    {{ numeroVisible(tarjeta) }}
                   </div>
 
                   <div class="card-identity">
@@ -157,11 +179,24 @@
                     </div>
                   </div>
                 </div>
-                <div class="card-face card-back" aria-hidden="true">
+                <div class="card-face card-back">
                   <div class="card-back-brand">MERCURY <span class="mercury-mark"></span></div>
                   <div class="card-stripe"></div>
-                  <div class="card-signature"><span>CVV</span><strong>•••</strong></div>
-                  <p class="card-back-note">Código de seguridad oculto</p>
+                  <div class="card-signature">
+                    <span>CVV</span
+                    ><strong>{{
+                      reveladas.has(tarjeta.id_tarjeta)
+                        ? reveladas.get(tarjeta.id_tarjeta)?.cvv || 'N/D'
+                        : '***'
+                    }}</strong>
+                  </div>
+                  <p class="card-back-note">
+                    {{
+                      reveladas.has(tarjeta.id_tarjeta)
+                        ? 'Código de seguridad'
+                        : 'Código de seguridad oculto'
+                    }}
+                  </p>
                   <div class="card-back-footer">
                     <span>SISTEMA DE TARJETAS</span><span>///</span>
                   </div>
@@ -170,6 +205,19 @@
             </div>
             <p class="card-hint">
               <span aria-hidden="true">↻</span> Enfoca o pasa el cursor para girar
+            </p>
+            <p
+              *ngIf="erroresVisibilidad.get(tarjeta.id_tarjeta)"
+              role="alert"
+              class="mt-3 rounded-lg border border-red-800 bg-red-950 p-3 text-sm text-red-300"
+            >
+              {{ erroresVisibilidad.get(tarjeta.id_tarjeta) }}
+            </p>
+            <p
+              *ngIf="reveladas.has(tarjeta.id_tarjeta) && !reveladas.get(tarjeta.id_tarjeta)?.cvv"
+              class="mt-3 text-sm text-neutral-400"
+            >
+              El CVV anterior no está disponible. Solicita su actualización al administrador.
             </p>
 
             <div class="card-balance">

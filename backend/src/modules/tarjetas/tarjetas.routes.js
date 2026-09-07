@@ -30,6 +30,11 @@ const router =
 
 
 // ADMIN
+router.post('/buscar', authMiddleware, requireRole('ADMINISTRADOR'),
+    validate(require('zod').z.object({ busqueda: require('zod').z.string().trim().min(1).max(120) }).strict()),
+    tarjetasController.buscar);
+
+// ADMIN
 router.get(
     '/',
     authMiddleware,
@@ -37,6 +42,14 @@ router.get(
     tarjetasController.listarTodas
 );
 
+
+// CLIENTE
+router.post(
+    '/:id/revelar',
+    authMiddleware,
+    requireRole('CLIENTE'),
+    tarjetasController.revelar
+);
 
 // CLIENTE
 router.get(

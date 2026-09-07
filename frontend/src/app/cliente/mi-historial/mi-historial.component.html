@@ -1,27 +1,6 @@
 <div class="mercury-bg mercury-shell">
   <div class="mx-auto max-w-7xl">
-    <nav class="mercury-nav flex flex-wrap items-center" aria-label="Navegación principal">
-      <span class="mercury-brand"
-        ><span class="mercury-mark" aria-hidden="true"></span>MERCURY</span
-      >
-
-      <a routerLink="/cliente" class="rounded-lg px-4 py-2 text-neutral-300 hover:bg-neutral-800">
-        Inicio
-      </a>
-
-      <a
-        routerLink="/cliente/tarjetas"
-        class="rounded-lg px-4 py-2 text-neutral-300 hover:bg-neutral-800"
-      >
-        Mis tarjetas
-      </a>
-
-      <a routerLink="/cliente/historial" class="mercury-button px-4 py-2"> Mi historial </a>
-
-      <div class="ml-auto">
-        <app-logout-button></app-logout-button>
-      </div>
-    </nav>
+    <app-navbar></app-navbar>
     <h1 class="text-3xl font-medium text-white">Mi historial</h1>
     <p class="mb-8 mt-2 text-neutral-400">Consulta tus consumos, pagos y reversos.</p>
     <div

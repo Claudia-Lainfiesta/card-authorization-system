@@ -1,47 +1,6 @@
 <div class="mercury-bg mercury-shell">
   <div class="mx-auto max-w-7xl">
-    <nav class="mercury-nav flex flex-wrap items-center" aria-label="Navegación principal">
-      <span class="mercury-brand"
-        ><span class="mercury-mark" aria-hidden="true"></span>MERCURY</span
-      >
-      <a
-        routerLink="/admin"
-        [ngClass]="
-          !soloBitacora
-            ? 'mercury-button px-4 py-2'
-            : 'rounded-lg px-4 py-2 text-neutral-300 hover:bg-neutral-800'
-        "
-        >Inicio</a
-      >
-      <a
-        routerLink="/admin/tarjetas"
-        [ngClass]="
-          false
-            ? 'mercury-button px-4 py-2'
-            : 'rounded-lg px-4 py-2 text-neutral-300 hover:bg-neutral-800'
-        "
-        >Tarjetas</a
-      >
-      <a
-        routerLink="/admin/usuarios"
-        [ngClass]="
-          false
-            ? 'mercury-button px-4 py-2'
-            : 'rounded-lg px-4 py-2 text-neutral-300 hover:bg-neutral-800'
-        "
-        >Usuarios</a
-      >
-      <a
-        routerLink="/admin/bitacora"
-        [ngClass]="
-          soloBitacora
-            ? 'mercury-button px-4 py-2'
-            : 'rounded-lg px-4 py-2 text-neutral-300 hover:bg-neutral-800'
-        "
-        >Bitácora</a
-      >
-      <div class="ml-auto"><app-logout-button></app-logout-button></div>
-    </nav>
+    <app-navbar></app-navbar>
 
     <div class="mb-8">
       <p class="font-mono text-xs uppercase tracking-[0.2em] text-neutral-400">Administrador</p>

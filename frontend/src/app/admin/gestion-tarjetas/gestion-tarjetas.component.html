@@ -1,25 +1,6 @@
 <div class="mercury-bg mercury-shell">
   <div class="mx-auto max-w-7xl">
-    <nav class="mercury-nav flex flex-wrap items-center" aria-label="Navegación principal">
-      <span class="mercury-brand"
-        ><span class="mercury-mark" aria-hidden="true"></span>MERCURY</span
-      >
-      <a routerLink="/admin" class="rounded-lg px-4 py-2 text-neutral-300 hover:bg-neutral-800"
-        >Inicio</a
-      >
-      <a routerLink="/admin/tarjetas" class="mercury-button px-4 py-2">Tarjetas</a>
-      <a
-        routerLink="/admin/usuarios"
-        class="rounded-lg px-4 py-2 text-neutral-300 hover:bg-neutral-800"
-        >Usuarios</a
-      >
-      <a
-        routerLink="/admin/bitacora"
-        class="rounded-lg px-4 py-2 text-neutral-300 hover:bg-neutral-800"
-        >Bitácora</a
-      >
-      <div class="ml-auto"><app-logout-button></app-logout-button></div>
-    </nav>
+    <app-navbar></app-navbar>
 
     <div class="mb-8 flex flex-wrap items-center justify-between gap-5">
       <div>
@@ -51,7 +32,7 @@
       class="mercury-secondary mb-5 px-4 py-2"
       (click)="cargarCatalogos()"
     >
-      Reintentar usuarios y emisores
+      Reintentar usuarios
     </button>
     <div class="mb-8 mercury-surface grid gap-5 p-6 md:grid-cols-2">
       <div>
@@ -169,7 +150,7 @@
         (cambiar)="pagina = $event"
       ></app-admin-paginacion>
     </ng-container>
-    <app-admin-modal
+    <app-mercury-modal
       *ngIf="mostrandoFormulario"
       [titulo]="tarjetaEditando ? 'Editar tarjeta' : 'Nueva tarjeta'"
       [ocupado]="guardando"
@@ -179,24 +160,20 @@
       <form [formGroup]="formulario" (ngSubmit)="guardar()">
         <fieldset [disabled]="guardando" class="grid gap-5 md:grid-cols-2">
           <div>
-            <label for="numero_tarjeta" class="mb-2 block text-sm text-neutral-300"
+            <label for="numero-generado" class="mb-2 block text-sm text-neutral-300"
               >Número de tarjeta</label
-            ><input
-              id="numero_tarjeta"
-              formControlName="numero_tarjeta"
+            >
+            <input
+              id="numero-generado"
               type="text"
-              inputmode="numeric"
-              autocomplete="off"
-              [attr.maxlength]="tarjetaEditando ? 19 : 16"
-              class="w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-white disabled:opacity-50"
-              [attr.aria-invalid]="
-                formulario.controls.numero_tarjeta.invalid &&
-                formulario.controls.numero_tarjeta.touched
+              readonly
+              [value]="
+                tarjetaEditando
+                  ? panel.numeroEnmascarado(tarjetaEditando.numero_tarjeta)
+                  : 'Se generará automáticamente al guardar'
               "
-            /><app-admin-error-campo
-              [control]="formulario.controls.numero_tarjeta"
-              mensaje="Usa 16 dígitos comenzando con 4. El número debe ser único."
-            ></app-admin-error-campo>
+              class="w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-white"
+            />
           </div>
           <div>
             <label for="nombre_titular" class="mb-2 block text-sm text-neutral-300"
@@ -218,14 +195,15 @@
           </div>
           <div>
             <label for="fecha_vencimiento" class="mb-2 block text-sm text-neutral-300"
-              >Vencimiento (YYYYMM)</label
+              >Vencimiento (mm/yyyy)</label
             ><input
               id="fecha_vencimiento"
               formControlName="fecha_vencimiento"
               type="text"
               inputmode="numeric"
-              maxlength="6"
-              placeholder="YYYYMM"
+              maxlength="7"
+              placeholder="mm/yyyy"
+              (input)="enmascararFecha($event)"
               class="w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-white disabled:opacity-50"
               [attr.aria-invalid]="
                 formulario.controls.fecha_vencimiento.invalid &&
@@ -233,7 +211,7 @@
               "
             /><app-admin-error-campo
               [control]="formulario.controls.fecha_vencimiento"
-              mensaje="Ingresa el año y un mes válido, por ejemplo 203012."
+              mensaje="Ingresa un mes y año válidos, por ejemplo 05/2028."
             ></app-admin-error-campo>
           </div>
           <div>
@@ -274,24 +252,14 @@
             ></app-admin-error-campo>
           </div>
           <div>
-            <label for="id_emisor" class="mb-2 block text-sm text-neutral-300">Emisor</label
-            ><select
-              id="id_emisor"
-              formControlName="id_emisor"
-              class="w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-white disabled:opacity-50"
-            >
-              <option value="">Selecciona un emisor</option>
-              <option
-                *ngFor="let emisor of emisores"
-                [value]="emisor.id_emisor"
-                [disabled]="!emisor.activo && emisor.id_emisor !== tarjetaEditando?.id_emisor"
-              >
-                {{ emisor.nombre }}{{ emisor.activo ? '' : ' (inactivo)' }}
-              </option></select
-            ><app-admin-error-campo
-              [control]="formulario.controls.id_emisor"
-              mensaje="Selecciona un emisor."
-            ></app-admin-error-campo>
+            <label for="emisor-mercury" class="mb-2 block text-sm text-neutral-300">Emisor</label>
+            <input
+              id="emisor-mercury"
+              type="text"
+              readonly
+              value="Mercury"
+              class="w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-white"
+            />
           </div>
           <div>
             <label for="id_usuario" class="mb-2 block text-sm text-neutral-300"
@@ -356,8 +324,8 @@
           </button>
         </div>
       </form>
-    </app-admin-modal>
-    <app-admin-modal
+    </app-mercury-modal>
+    <app-mercury-modal
       *ngIf="tarjetaEliminando"
       titulo="Cancelar tarjeta"
       [ocupado]="guardando"
@@ -385,6 +353,6 @@
           {{ guardando ? 'Cancelando...' : 'Confirmar cancelación' }}
         </button>
       </div>
-    </app-admin-modal>
+    </app-mercury-modal>
   </div>
 </div>

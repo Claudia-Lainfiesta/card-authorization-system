@@ -19,6 +19,7 @@ import {
     ActualizarFavoritaRequest,
     CrearTarjetaRequest,
     FavoritaResponse,
+    DatosTarjetaRevelados,
     TarjetaResponse,
     TarjetasResponse
 } from '../models/tarjeta.model';
@@ -81,6 +82,14 @@ export class TarjetasService {
             `${this.apiUrl}/${idTarjeta}`
         );
 
+    }
+
+    buscar(busqueda: string): Observable<TarjetasResponse> {
+        return this.http.post<TarjetasResponse>(`${this.apiUrl}/buscar`, { busqueda });
+    }
+
+    revelar(id: number): Observable<{ tarjeta: DatosTarjetaRevelados }> {
+        return this.http.post<{ tarjeta: DatosTarjetaRevelados }>(`${this.apiUrl}/${id}/revelar`, {});
     }
 
     actualizarFavorita(

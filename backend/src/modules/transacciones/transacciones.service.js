@@ -179,9 +179,7 @@ const crear = async (
                     }
 
 
-                    nuevoSaldo =
-                        saldoActual -
-                        monto;
+                    nuevoSaldo = Math.round((saldoActual - monto) * 100) / 100;
 
                 }
 
@@ -207,9 +205,7 @@ const crear = async (
                     }
 
 
-                    nuevoSaldo =
-                        saldoActual +
-                        monto;
+                    nuevoSaldo = Math.round((saldoActual + monto) * 100) / 100;
 
 
                     if (
@@ -247,9 +243,7 @@ const crear = async (
                     }
 
 
-                    nuevoSaldo =
-                        saldoActual +
-                        monto;
+                    nuevoSaldo = Math.round((saldoActual + monto) * 100) / 100;
 
 
                     if (

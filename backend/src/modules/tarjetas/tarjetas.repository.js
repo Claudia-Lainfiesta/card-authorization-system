@@ -2,7 +2,7 @@ const db =
     require('../../config/db');
 
 
-const listarTodas = async () => {
+const listarTodas = async (busqueda = '', limite = null) => {
 
     const resultado =
         await db.query(
@@ -26,8 +26,13 @@ const listarTodas = async () => {
                 ON t.id_usuario = u.id_usuario
             INNER JOIN emisores e
                 ON t.id_emisor = e.id_emisor
-            ORDER BY t.id_tarjeta;
-            `
+            WHERE $1 = '' OR t.numero_tarjeta::text LIKE '%' || $1 || '%'
+                OR t.nombre_titular ILIKE '%' || $1 || '%'
+                OR u.nombre_completo ILIKE '%' || $1 || '%'
+            ORDER BY t.id_tarjeta
+            LIMIT $2;
+            `,
+            [busqueda, limite]
         );
 
     return resultado.rows;
@@ -157,7 +162,7 @@ const buscarEmisorPorId = async (
 
 
 const crear = async ({
-    numeroTarjeta, nombreTitular, cvvHash, fechaVencimiento,
+    numeroTarjeta, nombreTitular, cvvHash, cvvCifrado, fechaVencimiento,
     montoAutorizado, montoDisponible, idUsuario, idEmisor, estado
 }) => {
     try {
@@ -169,14 +174,15 @@ const crear = async ({
             const resultado = await client.query(`
                 INSERT INTO tarjetas (
                     numero_tarjeta, nombre_titular, cvv_hash, fecha_vencimiento,
-                    monto_autorizado, monto_disponible, id_usuario, id_emisor, estado
-                ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+                    monto_autorizado, monto_disponible, id_usuario, id_emisor, estado, cvv_cifrado
+                ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+                ON CONFLICT (numero_tarjeta) DO NOTHING
                 RETURNING id_tarjeta;
             `, [numeroTarjeta, nombreTitular, cvvHash, fechaVencimiento,
-                montoAutorizado, montoDisponible, idUsuario, idEmisor, estado]);
-            return resultado.rows[0].id_tarjeta;
+                montoAutorizado, montoDisponible, idUsuario, idEmisor, estado, cvvCifrado]);
+            return resultado.rows[0]?.id_tarjeta;
         });
-        return buscarPorId(id);
+        return id ? buscarPorId(id) : null;
     } catch (error) {
         if (error.code === '23505') {
             throw Object.assign(new Error('La tarjeta ya se encuentra registrada'), { statusCode: 409 });
@@ -262,7 +268,7 @@ const actualizarFavorita = async (idTarjeta, idUsuario, favorita) => {
 const ejecutar = require('../../utils/transaction');
 const bloquearParaEdicion = async (client, id) => {
     const resultado = await client.query(
-        'SELECT id_tarjeta, monto_autorizado, monto_disponible, id_usuario, id_emisor FROM tarjetas WHERE id_tarjeta = $1 FOR UPDATE', [id]
+        'SELECT id_tarjeta, numero_tarjeta, monto_autorizado, monto_disponible, id_usuario, id_emisor FROM tarjetas WHERE id_tarjeta = $1 FOR UPDATE', [id]
     );
     return resultado.rows[0];
 };
@@ -277,6 +283,7 @@ const actualizarDetalle = async (client, id, datos) => {
             nombre_titular = COALESCE($3, nombre_titular),
             fecha_vencimiento = COALESCE($4, fecha_vencimiento),
             cvv_hash = COALESCE($5, cvv_hash),
+            cvv_cifrado = COALESCE($11, cvv_cifrado),
             monto_autorizado = $6, monto_disponible = $7,
             id_usuario = COALESCE($8, id_usuario),
             id_emisor = COALESCE($9, id_emisor),
@@ -287,10 +294,19 @@ const actualizarDetalle = async (client, id, datos) => {
     `, [id, datos.numero_tarjeta ?? null, datos.nombre_titular ?? null,
         datos.fecha_vencimiento ?? null, datos.cvv_hash ?? null,
         datos.monto_autorizado, datos.monto_disponible, datos.id_usuario ?? null,
-        datos.id_emisor ?? null, datos.estado ?? null]);
+        datos.id_emisor ?? null, datos.estado ?? null, datos.cvv_cifrado ?? null]);
+};
+
+const datosPropios = async (id, idUsuario) => {
+    const resultado = await db.query(
+        'SELECT id_tarjeta, numero_tarjeta, cvv_cifrado FROM tarjetas WHERE id_tarjeta = $1 AND id_usuario = $2',
+        [id, idUsuario]
+    );
+    return resultado.rows[0];
 };
 
 module.exports = {
+    datosPropios,
     ejecutar,
     bloquearParaEdicion,
     bloquearPropietario,

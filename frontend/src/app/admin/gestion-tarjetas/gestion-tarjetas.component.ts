@@ -1,14 +1,12 @@
 import { ChangeDetectorRef, Component, DestroyRef, inject, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, Validators } from '@angular/forms';
-import { forkJoin, finalize } from 'rxjs';
+import { finalize } from 'rxjs';
 import { TarjetasService } from '../../core/services/tarjetas.service';
 import { UsuariosService } from '../../core/services/usuarios.service';
-import { ReportesService } from '../../core/services/reportes.service';
 import { PanelClienteService } from '../../core/services/panel-cliente.service';
 import { Tarjeta, EstadoTarjeta, ActualizarTarjetaRequest } from '../../core/models/tarjeta.model';
 import { Usuario } from '../../core/models/usuario.model';
-import { Emisor } from '../../core/models/admin.model';
 import { errorApi, normalizar } from '../components/admin-utils';
 
 @Component({
@@ -21,13 +19,11 @@ export class GestionTarjetasComponent implements OnInit {
   private fb = inject(FormBuilder);
   private service = inject(TarjetasService);
   private usuariosService = inject(UsuariosService);
-  private reportes = inject(ReportesService);
   private cdr = inject(ChangeDetectorRef);
   private destroy = inject(DestroyRef);
   readonly panel = inject(PanelClienteService);
   tarjetas: Tarjeta[] = [];
   usuarios: Usuario[] = [];
-  emisores: Emisor[] = [];
   cargando = true;
   cargandoCatalogos = true;
   guardando = false;
@@ -44,9 +40,11 @@ export class GestionTarjetasComponent implements OnInit {
   tarjetaEditando: Tarjeta | null = null;
   tarjetaEliminando: Tarjeta | null = null;
   formulario = this.fb.nonNullable.group({
-    numero_tarjeta: ['', [Validators.required, Validators.pattern(/^4[0-9]{15}$/)]],
     nombre_titular: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(120)]],
-    fecha_vencimiento: ['', [Validators.required, Validators.pattern(/^[0-9]{4}(0[1-9]|1[0-2])$/)]],
+    fecha_vencimiento: [
+      '',
+      [Validators.required, Validators.pattern(/^(0[1-9]|1[0-2])\/[0-9]{4}$/)],
+    ],
     cvv: ['', [Validators.required, Validators.pattern(/^[0-9]{3}$/)]],
     monto_autorizado: [
       0,
@@ -57,7 +55,6 @@ export class GestionTarjetasComponent implements OnInit {
         Validators.pattern(/^\d+(\.\d{1,2})?$/),
       ],
     ],
-    id_emisor: ['', Validators.required],
     id_usuario: [0, [Validators.required, Validators.min(1)]],
     estado: ['ACTIVA' as EstadoTarjeta, Validators.required],
   });
@@ -111,17 +108,17 @@ export class GestionTarjetasComponent implements OnInit {
   cargarCatalogos(): void {
     this.cargandoCatalogos = true;
     this.errorCatalogos = '';
-    forkJoin({ usuarios: this.usuariosService.listar(), emisores: this.reportes.emisores() })
+    this.usuariosService
+      .listar()
       .pipe(takeUntilDestroyed(this.destroy))
       .subscribe({
         next: (r) => {
-          this.usuarios = r.usuarios.usuarios;
-          this.emisores = r.emisores.emisores;
+          this.usuarios = r.usuarios;
           this.cargandoCatalogos = false;
           this.cdr.markForCheck();
         },
         error: () => {
-          this.errorCatalogos = 'No fue posible cargar los usuarios y emisores del formulario';
+          this.errorCatalogos = 'No fue posible cargar los usuarios del formulario';
           this.cargandoCatalogos = false;
           this.cdr.markForCheck();
         },
@@ -137,32 +134,28 @@ export class GestionTarjetasComponent implements OnInit {
     this.tarjetaEditando = tarjeta;
     this.errorFormulario = '';
     this.mensaje = '';
-    const numero = tarjeta ? this.panel.numeroEnmascarado(tarjeta.numero_tarjeta) : '';
+    const fecha = tarjeta?.fecha_vencimiento || '';
     this.formulario.reset({
-      numero_tarjeta: numero,
       nombre_titular: tarjeta?.nombre_titular || '',
-      fecha_vencimiento: tarjeta?.fecha_vencimiento || '',
+      fecha_vencimiento: fecha ? fecha.slice(4, 6) + '/' + fecha.slice(0, 4) : '',
       cvv: '',
       monto_autorizado: Number(tarjeta?.monto_autorizado || 0),
       id_usuario: tarjeta?.id_usuario || 0,
-      id_emisor: tarjeta?.id_emisor || '',
       estado: tarjeta?.estado || 'ACTIVA',
     });
-    this.formulario.controls.numero_tarjeta.setValidators([
-      Validators.required,
-      (control) =>
-        (tarjeta && control.value === numero) || /^4[0-9]{15}$/.test(control.value)
-          ? null
-          : { pattern: true },
-    ]);
     this.formulario.controls.cvv.setValidators(
       tarjeta
         ? [Validators.pattern(/^[0-9]{3}$/)]
         : [Validators.required, Validators.pattern(/^[0-9]{3}$/)],
     );
-    this.formulario.controls.numero_tarjeta.updateValueAndValidity();
     this.formulario.controls.cvv.updateValueAndValidity();
     this.mostrandoFormulario = true;
+  }
+  enmascararFecha(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const digitos = input.value.replace(/\D/g, '').slice(0, 6);
+    const fecha = digitos.length > 2 ? digitos.slice(0, 2) + '/' + digitos.slice(2) : digitos;
+    this.formulario.controls.fecha_vencimiento.setValue(fecha);
   }
   cerrar(): void {
     if (this.guardando) return;
@@ -185,11 +178,8 @@ export class GestionTarjetasComponent implements OnInit {
     const editando = this.tarjetaEditando;
     const cambios: ActualizarTarjetaRequest = { ...datos };
     if (editando) {
-      if (datos.numero_tarjeta === this.panel.numeroEnmascarado(editando.numero_tarjeta))
-        delete cambios.numero_tarjeta;
       if (!datos.cvv) delete cambios.cvv;
       if (datos.id_usuario === editando.id_usuario) delete cambios.id_usuario;
-      if (datos.id_emisor === editando.id_emisor) delete cambios.id_emisor;
     }
     const peticion = editando
       ? this.service.actualizar(editando.id_tarjeta, cambios)
@@ -214,8 +204,6 @@ export class GestionTarjetasComponent implements OnInit {
         },
         error: (e) => {
           this.errorFormulario = errorApi(e, 'No fue posible guardar la tarjeta');
-          if (this.errorFormulario.includes('ya se encuentra registrada'))
-            this.formulario.controls.numero_tarjeta.setErrors({ duplicado: true });
           this.cdr.markForCheck();
         },
       });

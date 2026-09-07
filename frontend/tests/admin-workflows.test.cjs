@@ -37,6 +37,11 @@ test('formularios y listados administrativos con Angular y RxJS', async () => {
     new Function('require', 'module', 'exports', output)(localRequire, mod, mod.exports);
     return mod.exports;
   }
+  const { MisTarjetasComponent } = cargar('src/app/cliente/mis-tarjetas/mis-tarjetas.component.ts');
+  const { GestionPagosComponent } = cargar(
+    'src/app/admin/gestion-pagos/gestion-pagos.component.ts',
+  );
+  const { TransaccionesService } = cargar('src/app/core/services/transacciones.service.ts');
   const { TarjetasService } = cargar('src/app/core/services/tarjetas.service.ts');
   const { UsuariosService } = cargar('src/app/core/services/usuarios.service.ts');
   const { AuthService } = cargar('src/app/core/services/auth.service.ts');
@@ -94,6 +99,11 @@ test('formularios y listados administrativos con Angular y RxJS', async () => {
       provide: imports['@angular/forms'].FormBuilder,
       useValue: new imports['@angular/forms'].FormBuilder(),
     },
+    { provide: imports['@angular/common'].DOCUMENT, useValue: { hidden: false } },
+    {
+      provide: TransaccionesService,
+      useValue: { registrarPago: (...args) => request('pago', ...args) },
+    },
     { provide: core.ChangeDetectorRef, useValue: { markForCheck() {} } },
     { provide: AuthService, useValue: { obtenerUsuario: () => usuarios[0] } },
     { provide: PanelClienteService, useValue: new PanelClienteService() },
@@ -110,6 +120,9 @@ test('formularios y listados administrativos con Angular y RxJS', async () => {
       provide: TarjetasService,
       useValue: {
         listarTodas: () => of({ tarjetas }),
+        listarMias: () => of({ tarjetas }),
+        revelar: (...args) => request('revelar', ...args),
+        buscar: (...args) => request('buscar', ...args),
         crear: (...args) => request('crearTarjeta', ...args),
         actualizar: (...args) => request('editarTarjeta', ...args),
         cancelar: (...args) => request('cancelarTarjeta', ...args),
@@ -145,12 +158,12 @@ test('formularios y listados administrativos con Angular y RxJS', async () => {
     cards.filtrar();
     assert.equal(cards.pagina, 1);
     cards.editar(tarjeta);
-    assert.equal(cards.formulario.controls.numero_tarjeta.value, '•••• •••• •••• 1234');
+    assert.equal(cards.formulario.controls.fecha_vencimiento.value, '12/2030');
     assert.equal(cards.formulario.controls.cvv.value, '');
     assert.equal(cards.formulario.valid, true);
-    cards.formulario.controls.fecha_vencimiento.setValue('203013');
+    cards.formulario.controls.fecha_vencimiento.setValue('13/2030');
     assert.equal(cards.formulario.valid, false);
-    cards.formulario.controls.fecha_vencimiento.setValue('203012');
+    cards.formulario.controls.fecha_vencimiento.setValue('12/2030');
     cards.formulario.controls.monto_autorizado.setValue(1200);
     cards.guardar();
     const edit = peticiones.at(-1);
@@ -174,17 +187,15 @@ test('formularios y listados administrativos con Angular y RxJS', async () => {
     peticiones.at(-1).subject.next({ mensaje: 'Guardado', tarjeta });
     peticiones.at(-1).subject.complete();
     assert.equal(cards.mostrandoFormulario, false);
-    assert.equal(cards.formulario.controls.numero_tarjeta.value, '');
+    assert.equal(cards.formulario.controls.cvv.value, '');
     cards.abrirFormularioCreacion();
     assert.equal(cards.formulario.valid, false);
     cards.formulario.setValue({
-      numero_tarjeta: '4000000000005678',
       nombre_titular: 'Titular Nuevo',
-      fecha_vencimiento: '203012',
+      fecha_vencimiento: '12/2030',
       cvv: '123',
       monto_autorizado: 500,
       id_usuario: 2,
-      id_emisor: 'BANCO-PRUEBA-01',
       estado: 'ACTIVA',
     });
     cards.guardar();
@@ -231,6 +242,87 @@ test('formularios y listados administrativos con Angular y RxJS', async () => {
     users.abrir();
     assert.equal(users.formulario.controls.password.enabled, true);
     assert.equal(users.formulario.valid, false);
+
+    const clientCards = core.runInInjectionContext(injector, () => new MisTarjetasComponent());
+    clientCards.ngOnInit();
+    assert.equal(clientCards.numeroVisible(tarjeta), '**** **** **** 1234');
+    clientCards.alternarVisibilidad(tarjeta);
+    const reveal = peticiones.at(-1);
+    clientCards.alternarVisibilidad(tarjeta);
+    assert.equal(peticiones.at(-1), reveal);
+    reveal.subject.next({
+      tarjeta: { id_tarjeta: 1, numero_tarjeta: '4000000000001234', cvv: '123' },
+    });
+    reveal.subject.complete();
+    assert.equal(clientCards.reveladas.size, 1);
+    assert.equal(clientCards.numeroVisible(tarjeta).replace(/ /g, '').length, 16);
+    clientCards.alternarVisibilidad(tarjeta);
+    assert.equal(clientCards.reveladas.size, 0);
+    clientCards.alternarVisibilidad(tarjeta);
+    const doc = injector.get(imports['@angular/common'].DOCUMENT);
+    doc.hidden = true;
+    clientCards.cambioVisibilidad();
+    doc.hidden = false;
+    peticiones
+      .at(-1)
+      .subject.next({ tarjeta: { id_tarjeta: 1, numero_tarjeta: '4000000000001234', cvv: '123' } });
+    peticiones.at(-1).subject.complete();
+    assert.equal(
+      clientCards.reveladas.size,
+      0,
+      'descarta una respuesta pendiente al ocultar la pestaña',
+    );
+    clientCards.alternarVisibilidad(tarjeta);
+    peticiones.at(-1).subject.error({});
+    assert.equal(clientCards.reveladas.size, 0);
+    assert.ok(clientCards.erroresVisibilidad.get(1));
+
+    const pagos = core.runInInjectionContext(injector, () => new GestionPagosComponent());
+    pagos.ngOnInit();
+    pagos.busqueda.setValue('José');
+    await new Promise((r) => setTimeout(r, 350));
+    const busquedaAnterior = peticiones.at(-1);
+    pagos.busqueda.setValue('Otro');
+    await new Promise((r) => setTimeout(r, 350));
+    busquedaAnterior.subject.next({ tarjetas: [tarjeta] });
+    assert.equal(pagos.resultados.length, 0, 'ignora búsquedas anteriores');
+    peticiones.at(-1).subject.next({ tarjetas });
+    peticiones.at(-1).subject.complete();
+    pagos.seleccionar(tarjeta);
+    pagos.monto.setValue(301);
+    assert.equal(pagos.monto.invalid, true);
+    pagos.monto.setValue(100.001);
+    assert.equal(pagos.monto.invalid, true);
+    pagos.monto.setValue(100);
+    pagos.registrarPago();
+    const pagoFallido = peticiones.at(-1);
+    pagos.registrarPago();
+    pagos.seleccionar(tarjetas[1]);
+    assert.equal(peticiones.at(-1), pagoFallido);
+    assert.equal(pagos.seleccionada.id_tarjeta, 1);
+    pagoFallido.subject.error({});
+    assert.equal(pagos.guardando, false);
+    assert.equal(pagos.monto.value, 100);
+    assert.ok(pagos.error);
+    pagos.registrarPago();
+    peticiones
+      .at(-1)
+      .subject.next({
+        mensaje: 'Pago registrado',
+        transaccion: {
+          id_transaccion: 1,
+          id_tarjeta: 1,
+          monto: 100,
+          saldo_anterior: 700,
+          saldo_nuevo: 800,
+          fecha: '2026-09-06T12:00:00Z',
+        },
+      });
+    peticiones.at(-1).subject.complete();
+    assert.equal(pagos.deuda, 200);
+    assert.equal(pagos.comprobante.id_transaccion, 1);
+    assert.equal(pagos.monto.value, null);
+    assert.equal(pagos.busqueda.enabled, true);
 
     const dashboard = core.runInInjectionContext(injector, () => new AdminDashboardComponent());
     dashboard.ngOnInit();

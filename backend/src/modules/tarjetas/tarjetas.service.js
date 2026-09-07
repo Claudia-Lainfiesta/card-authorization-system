@@ -177,111 +177,41 @@ const obtenerPorId = async (
 };
 
 
-const crear = async (
-    datos
-) => {
+const { EMISOR_MERCURY } = require('../../config/mercury');
+const { generarNumero, cifrarCvv, descifrarCvv } = require('../../utils/cardData');
 
-    const tarjetaExistente =
-        await tarjetasRepository
-            .buscarPorNumero(
-                datos.numero_tarjeta
-            );
-
-
-    if (tarjetaExistente) {
-
-        throw crearError(
-            'La tarjeta ya se encuentra registrada',
-            409
-        );
-    }
-
-
-    const usuario =
-        await usuariosRepository
-            .buscarPorId(
-                datos.id_usuario
-            );
-
-
-    if (!usuario || !usuario.activo) {
-
-        throw crearError(
-            'El usuario propietario no existe o está inactivo',
-            404
-        );
-    }
-
-
-    const emisor =
-        await tarjetasRepository
-            .buscarEmisorPorId(
-                datos.id_emisor
-            );
-
-
-    if (!emisor) {
-
-        throw crearError(
-            'El emisor no existe',
-            404
-        );
-    }
-
-
-    if (!emisor.activo) {
-
-        throw crearError(
-            'El emisor se encuentra inactivo',
-            400
-        );
-    }
-
-
-    const cvvHash =
-        await bcrypt.hash(
-            datos.cvv,
-            10
-        );
-
-
-    const tarjeta =
-        await tarjetasRepository.crear({
-
-            numeroTarjeta:
-                datos.numero_tarjeta,
-
-            nombreTitular:
-                datos.nombre_titular,
-
-            cvvHash,
-
-            fechaVencimiento:
-                datos.fecha_vencimiento,
-
-            montoAutorizado:
-                datos.monto_autorizado,
-
-            montoDisponible:
-                datos.monto_disponible,
-
-            idUsuario:
-                datos.id_usuario,
-
-            idEmisor:
-                datos.id_emisor,
-
-            estado:
-                datos.estado
-
+const crear = async (datos) => {
+    const usuario = await usuariosRepository.buscarPorId(datos.id_usuario);
+    if (!usuario || !usuario.activo) throw crearError('El usuario propietario no existe o está inactivo', 400);
+    const emisor = await tarjetasRepository.buscarEmisorPorId(EMISOR_MERCURY);
+    if (!emisor || !emisor.activo) throw crearError('El emisor Mercury no está configurado', 503);
+    const cvvHash = await bcrypt.hash(datos.cvv, 10);
+    // El índice UNIQUE y ON CONFLICT también cubren altas simultáneas.
+    for (let intento = 0; intento < 10; intento++) {
+        const numero = generarNumero();
+        if (await tarjetasRepository.buscarPorNumero(numero)) continue;
+        const tarjeta = await tarjetasRepository.crear({
+            numeroTarjeta: numero, nombreTitular: datos.nombre_titular,
+            cvvHash, cvvCifrado: cifrarCvv(datos.cvv, numero),
+            fechaVencimiento: datos.fecha_vencimiento,
+            montoAutorizado: datos.monto_autorizado,
+            montoDisponible: datos.monto_disponible ?? datos.monto_autorizado,
+            idUsuario: datos.id_usuario, idEmisor: EMISOR_MERCURY, estado: datos.estado
         });
-
-
-    return convertirTarjetaRespuesta(
-        tarjeta
-    );
+        if (tarjeta) return convertirTarjetaRespuesta(tarjeta);
+    }
+    throw crearError('No fue posible generar una tarjeta única. Inténtalo de nuevo', 503);
 };
 
+const revelar = async (idTarjeta, usuario) => {
+    if (usuario.rol !== 'CLIENTE') throw crearError('No autorizado para este recurso', 403);
+    const id = Number(idTarjeta);
+    if (!Number.isSafeInteger(id) || id <= 0) throw crearError('ID de tarjeta inválido', 400);
+    const tarjeta = await tarjetasRepository.datosPropios(id, usuario.id_usuario);
+    if (!tarjeta) throw crearError('Tarjeta no encontrada', 404);
+    const numero = tarjeta.numero_tarjeta.trim();
+    return { id_tarjeta: id, numero_tarjeta: numero, cvv: descifrarCvv(tarjeta.cvv_cifrado, numero) };
+};
 
 const actualizar = async (idTarjeta, datos) => {
     const id = Number(idTarjeta);
@@ -311,7 +241,8 @@ const actualizar = async (idTarjeta, datos) => {
             if (datos.monto_disponible !== undefined && Math.round(datos.monto_disponible * 100) !== autorizado - utilizado)
                 throw crearError('El disponible se calcula conservando el monto ya utilizado', 400);
             await tarjetasRepository.actualizarDetalle(client, id, {
-                ...datos, cvv_hash: cvvHash,
+                ...datos, id_emisor: EMISOR_MERCURY, cvv_hash: cvvHash,
+                cvv_cifrado: datos.cvv ? cifrarCvv(datos.cvv, actual.numero_tarjeta.trim()) : undefined,
                 monto_autorizado: autorizado / 100, monto_disponible: disponible
             });
         });
@@ -394,7 +325,15 @@ const actualizarFavorita = async (idTarjeta, usuarioSolicitante, favorita) => {
 };
 
 
+const buscar = async (busqueda) => {
+    const texto = /^[\d\s-]+$/.test(busqueda) ? busqueda.replace(/[\s-]/g, '') : busqueda;
+    const tarjetas = await tarjetasRepository.listarTodas(texto, 20);
+    return tarjetas.map(convertirTarjetaRespuesta);
+};
+
 module.exports = {
+    buscar,
+    revelar,
 
     actualizarFavorita,
 

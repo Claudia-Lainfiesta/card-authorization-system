@@ -15,7 +15,8 @@ import {
 } from '../../../environments/environment';
 
 import {
-    TransaccionesResponse
+    TransaccionesResponse,
+    PagoResponse
 } from '../models/transaccion.model';
 
 
@@ -40,6 +41,12 @@ export class TransaccionesService {
             `${this.apiUrl}/mias`
         );
 
+    }
+
+    registrarPago(id_tarjeta: number, monto: number): Observable<PagoResponse> {
+        return this.http.post<PagoResponse>(this.apiUrl, {
+            id_tarjeta, monto, tipo: 'PAGO', comercio: 'Pago recibido'
+        });
     }
 
 }

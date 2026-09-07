@@ -165,7 +165,14 @@ const logout = async (
 };
 
 
+const perfil = async (req, res, next) => {
+    res.set('Cache-Control', 'no-store, private');
+    try { res.json({ usuario: await authService.perfil(req.user.id_usuario) }); }
+    catch (error) { next(error); }
+};
+
 module.exports = {
+    perfil,
     registro,
     login,
     refresh,

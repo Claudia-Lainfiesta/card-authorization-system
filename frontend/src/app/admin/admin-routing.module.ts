@@ -1,4 +1,5 @@
 import { NgModule } from '@angular/core';
+import { GestionPagosComponent } from './gestion-pagos/gestion-pagos.component';
 
 import { RouterModule, Routes } from '@angular/router';
 
@@ -9,6 +10,7 @@ import { GestionTarjetasComponent } from './gestion-tarjetas/gestion-tarjetas.co
 import { GestionUsuariosComponent } from './gestion-usuarios/gestion-usuarios.component';
 
 const routes: Routes = [
+  { path: 'pagos', component: GestionPagosComponent },
   { path: 'bitacora', component: AdminDashboardComponent, data: { bitacora: true } },
 
   {
