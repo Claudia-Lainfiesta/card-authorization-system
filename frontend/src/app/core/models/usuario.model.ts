@@ -1,59 +1,62 @@
-export type RolUsuario =
-    'ADMINISTRADOR' |
-    'CLIENTE';
-
+export type RolUsuario = 'ADMINISTRADOR' | 'CLIENTE';
 
 export interface Usuario {
+  id_usuario: number;
 
-    id_usuario: number;
+  nombre_completo: string;
 
-    nombre_completo: string;
+  correo: string;
 
-    correo: string;
+  rol: RolUsuario;
 
-    rol: RolUsuario;
+  activo?: boolean;
 
-    activo?: boolean;
+  fecha_creacion?: string;
 
-    fecha_creacion?: string;
-
-    ultimo_login?: string | null;
+  ultimo_login?: string | null;
 }
-
 
 export interface LoginResponse {
+  mensaje: string;
 
-    mensaje: string;
+  usuario: Usuario;
 
-    usuario: Usuario;
-
-    accessToken: string;
+  accessToken: string;
 }
-
 
 export interface RegistroResponse {
+  mensaje: string;
 
-    mensaje: string;
-
-    usuario: Usuario;
+  usuario: Usuario;
 }
-
 
 export interface RefreshResponse {
-
-    accessToken: string;
+  accessToken: string;
 }
-
 
 export interface UsuariosResponse {
-
-    usuarios: Usuario[];
+  usuarios: Usuario[];
 }
 
-
 export interface ActualizarRolResponse {
+  mensaje: string;
 
-    mensaje: string;
-
-    usuario: Usuario;
+  usuario: Usuario;
+}
+export interface CrearUsuarioRequest {
+  nombre_completo: string;
+  correo: string;
+  password: string;
+  rol: RolUsuario;
+}
+export interface ActualizarUsuarioRequest {
+  nombre_completo: string;
+  correo: string;
+  rol: RolUsuario;
+  activo: boolean;
+}
+export interface EliminarUsuarioResponse {
+  mensaje: string;
+  id_usuario: number;
+  tarjetas_canceladas: number;
 }

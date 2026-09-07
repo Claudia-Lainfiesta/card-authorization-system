@@ -1,59 +1,43 @@
-import {
-    NgModule
-} from '@angular/core';
+import { NgModule } from '@angular/core';
+
+import { CommonModule } from '@angular/common';
+
+import { ReactiveFormsModule } from '@angular/forms';
+
+import { AdminRoutingModule } from './admin-routing.module';
+
+import { AdminDashboardComponent } from './admin-dashboard/admin-dashboard.component';
+
+import { GestionTarjetasComponent } from './gestion-tarjetas/gestion-tarjetas.component';
+
+import { GestionUsuariosComponent } from './gestion-usuarios/gestion-usuarios.component';
+
+import { SharedModule } from '../shared/shared.module';
 
 import {
-    CommonModule
-} from '@angular/common';
-
-import {
-    ReactiveFormsModule
-} from '@angular/forms';
-
-import {
-    AdminRoutingModule
-} from './admin-routing.module';
-
-import {
-    AdminDashboardComponent
-} from './admin-dashboard/admin-dashboard.component';
-
-import {
-    GestionTarjetasComponent
-} from './gestion-tarjetas/gestion-tarjetas.component';
-
-import {
-    GestionUsuariosComponent
-} from './gestion-usuarios/gestion-usuarios.component';
-
-import {
-    SharedModule
-} from '../shared/shared.module';
+  AdminModalComponent,
+  AdminPaginacionComponent,
+  AdminMensajeComponent,
+  AdminErrorCampoComponent,
+  AdminIconoComponent,
+} from './components/admin-controls';
 
 @NgModule({
+  declarations: [AdminDashboardComponent, GestionTarjetasComponent, GestionUsuariosComponent],
 
-    declarations: [
+  imports: [
+    CommonModule,
+    AdminModalComponent,
+    AdminPaginacionComponent,
+    AdminMensajeComponent,
+    AdminErrorCampoComponent,
+    AdminIconoComponent,
 
-        AdminDashboardComponent,
+    ReactiveFormsModule,
 
-        GestionTarjetasComponent,
+    AdminRoutingModule,
 
-        GestionUsuariosComponent
-
-    ],
-
-    imports: [
-
-        CommonModule,
-
-        ReactiveFormsModule,
-
-        AdminRoutingModule,
-        
-        SharedModule
-
-    ]
-
+    SharedModule,
+  ],
 })
-export class AdminModule {
-}
+export class AdminModule {}

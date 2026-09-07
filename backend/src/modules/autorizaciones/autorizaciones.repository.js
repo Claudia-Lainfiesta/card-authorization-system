@@ -231,7 +231,22 @@ const existeNumeroAutorizacion =
     };
 
 
+const bitacora = async (limit, offset) => {
+    // Cuenta y página en una sola instantánea, incluso si la página queda vacía.
+    const resultado = await db.query(`
+        SELECT (SELECT COUNT(*)::int FROM autorizaciones) AS total,
+            COALESCE((SELECT json_agg(p) FROM (
+                SELECT id_autorizacion, fecha, hora, tienda, monto, status
+                FROM autorizaciones
+                ORDER BY fecha DESC, hora DESC, id_autorizacion DESC
+                LIMIT $1 OFFSET $2
+            ) p), '[]'::json) AS autorizaciones;
+    `, [limit, offset]);
+    return resultado.rows[0];
+};
+
 module.exports = {
+    bitacora,
 
     ejecutar,
 

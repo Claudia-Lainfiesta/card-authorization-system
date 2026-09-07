@@ -1,127 +1,308 @@
-<div class="min-h-screen bg-slate-950 p-6">
+<div class="mercury-bg mercury-shell">
+  <div class="mx-auto max-w-7xl">
+    <nav class="mercury-nav flex flex-wrap items-center" aria-label="Navegación principal">
+      <span class="mercury-brand"
+        ><span class="mercury-mark" aria-hidden="true"></span>MERCURY</span
+      >
+      <a routerLink="/admin" class="rounded-lg px-4 py-2 text-neutral-300 hover:bg-neutral-800"
+        >Inicio</a
+      >
+      <a
+        routerLink="/admin/tarjetas"
+        class="rounded-lg px-4 py-2 text-neutral-300 hover:bg-neutral-800"
+        >Tarjetas</a
+      >
+      <a routerLink="/admin/usuarios" class="mercury-button px-4 py-2">Usuarios</a>
+      <a
+        routerLink="/admin/bitacora"
+        class="rounded-lg px-4 py-2 text-neutral-300 hover:bg-neutral-800"
+        >Bitácora</a
+      >
+      <div class="ml-auto"><app-logout-button></app-logout-button></div>
+    </nav>
 
-    <div class="mx-auto max-w-7xl">
-
-        <nav class="mb-8 flex flex-wrap items-center gap-3 rounded-xl border border-slate-800 bg-slate-900 p-4">
-
-            <a routerLink="/admin" class="rounded-lg px-4 py-2 text-slate-300 hover:bg-slate-800">
-                Dashboard
-            </a>
-
-            <a routerLink="/admin/tarjetas" class="rounded-lg px-4 py-2 text-slate-300 hover:bg-slate-800">
-                Tarjetas
-            </a>
-
-            <a routerLink="/admin/usuarios" class="rounded-lg bg-indigo-600 px-4 py-2 text-white">
-                Usuarios
-            </a>
-
-            <div class="ml-auto">
-                <app-logout-button></app-logout-button>
-            </div>
-        </nav>
-
-
-        <h1 class="text-3xl font-bold text-white">
-            Gestión de Usuarios
-        </h1>
-
-        <p class="mb-6 mt-2 text-slate-400">
-            Consulta usuarios y administra sus roles.
-        </p>
-
-
-        <div *ngIf="mensaje" class="mb-5 rounded-lg border border-emerald-800 bg-emerald-950 p-3 text-emerald-300">
-            {{ mensaje }}
-        </div>
-
-
-        <div *ngIf="error" class="mb-5 rounded-lg border border-red-800 bg-red-950 p-3 text-red-300">
-            {{ error }}
-        </div>
-
-
-        <div class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-900">
-
-            <table class="w-full text-left">
-
-                <thead class="border-b border-slate-800 text-sm text-slate-400">
-
-                    <tr>
-
-                        <th class="p-4">ID</th>
-                        <th class="p-4">Nombre</th>
-                        <th class="p-4">Correo</th>
-                        <th class="p-4">Rol</th>
-                        <th class="p-4">Activo</th>
-                        <th class="p-4">Último login</th>
-
-                    </tr>
-
-                </thead>
-
-
-                <tbody>
-
-                    <tr *ngFor="let usuario of usuarios" class="border-b border-slate-800 text-slate-300">
-
-                        <td class="p-4">
-                            {{ usuario.id_usuario }}
-                        </td>
-
-                        <td class="p-4">
-                            {{ usuario.nombre_completo }}
-                        </td>
-
-                        <td class="p-4">
-                            {{ usuario.correo }}
-                        </td>
-
-                        <td class="p-4">
-
-                            <select #selectorRol [value]="usuario.rol"
-                                [disabled]="usuario.id_usuario === usuarioActualId"
-                                (change)="cambiarRol(usuario, selectorRol.value)"
-                                class="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white disabled:opacity-50">
-
-                                <option value="ADMINISTRADOR">
-                                    ADMINISTRADOR
-                                </option>
-
-                                <option value="CLIENTE">
-                                    CLIENTE
-                                </option>
-
-                            </select>
-
-                        </td>
-
-                        <td class="p-4">
-
-                            {{ usuario.activo
-                            ? 'Sí'
-                            : 'No'
-                            }}
-
-                        </td>
-
-                        <td class="p-4">
-
-                            {{ usuario.ultimo_login
-                            ? (usuario.ultimo_login | date:'dd/MM/yyyy HH:mm')
-                            : 'Nunca'
-                            }}
-
-                        </td>
-
-                    </tr>
-
-                </tbody>
-
-            </table>
-
-        </div>
-
+    <div class="mb-8 flex flex-wrap items-center justify-between gap-5">
+      <div>
+        <h1 class="text-3xl font-medium text-white">Gestión de usuarios</h1>
+        <p class="mt-1 text-neutral-400">Consulta usuarios y administra sus cuentas.</p>
+      </div>
+      <button type="button" class="mercury-button px-5 py-3" (click)="abrir()">
+        Nuevo usuario
+      </button>
     </div>
-
+    <app-admin-mensaje [error]="error" [mensaje]="mensaje"></app-admin-mensaje>
+    <button
+      *ngIf="error"
+      type="button"
+      class="mercury-secondary mb-5 px-4 py-2"
+      (click)="cargarUsuarios()"
+    >
+      Reintentar usuarios
+    </button>
+    <div class="mb-8 mercury-surface grid gap-5 p-6 md:grid-cols-2">
+      <div>
+        <label for="buscar-usuario" class="mb-2 block text-sm text-neutral-300"
+          >Buscar por nombre o correo</label
+        ><input
+          id="buscar-usuario"
+          type="search"
+          #buscar
+          [value]="busqueda"
+          (input)="busqueda = buscar.value; filtrar()"
+          class="w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-white disabled:opacity-50"
+        />
+      </div>
+      <div>
+        <label for="filtro-rol" class="mb-2 block text-sm text-neutral-300">Rol</label
+        ><select
+          id="filtro-rol"
+          #rol
+          [value]="rolFiltro"
+          (change)="rolFiltro = rol.value; filtrar()"
+          class="w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-white disabled:opacity-50"
+        >
+          <option value="">Todos</option>
+          <option value="ADMINISTRADOR">Administrador</option>
+          <option value="CLIENTE">Cliente</option>
+        </select>
+      </div>
+    </div>
+    <ng-container *ngIf="cargando"
+      ><div class="mercury-surface p-8 text-center text-neutral-400" role="status">
+        <span
+          class="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-neutral-700 border-t-neutral-300 motion-reduce:animate-none"
+          aria-hidden="true"
+        ></span
+        >Cargando...
+      </div></ng-container
+    >
+    <ng-container *ngIf="!cargando && !error">
+      <div class="mercury-table overflow-x-auto mercury-surface">
+        <table class="w-full text-left">
+          <caption class="sr-only">
+            Todos los usuarios del sistema
+          </caption>
+          <thead class="border-b border-neutral-800 text-sm text-neutral-400">
+            <tr>
+              <th scope="col">Nombre</th>
+              <th scope="col">Correo</th>
+              <th scope="col">Rol</th>
+              <th scope="col">Estado</th>
+              <th scope="col" class="text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let usuario of visibles"
+              class="border-b border-neutral-800 text-neutral-300"
+            >
+              <td>
+                {{ usuario.nombre_completo
+                }}<span
+                  *ngIf="usuario.id_usuario === usuarioActualId"
+                  class="ml-2 text-xs text-neutral-500"
+                  >(Tú)</span
+                >
+              </td>
+              <td>{{ usuario.correo }}</td>
+              <td>
+                <span
+                  class="mercury-badge"
+                  [attr.data-status]="usuario.rol === 'ADMINISTRADOR' ? 'ACTIVA' : null"
+                  >{{ usuario.rol === 'ADMINISTRADOR' ? 'Administrador' : 'Cliente' }}</span
+                >
+              </td>
+              <td>
+                <span class="mercury-badge" [attr.data-status]="usuario.activo">{{
+                  usuario.activo ? 'Activo' : 'Inactivo'
+                }}</span>
+              </td>
+              <td>
+                <div class="flex justify-end gap-3">
+                  <button
+                    type="button"
+                    class="mercury-secondary inline-flex items-center justify-center px-3 py-2"
+                    (click)="abrir(usuario)"
+                    [attr.aria-label]="'Editar usuario ' + usuario.nombre_completo"
+                    title="Editar usuario"
+                  >
+                    <app-admin-icono tipo="editar"></app-admin-icono>
+                  </button>
+                  <button
+                    type="button"
+                    class="mercury-danger inline-flex items-center justify-center px-3 py-2 disabled:opacity-50"
+                    [disabled]="usuario.id_usuario === usuarioActualId"
+                    (click)="confirmarEliminacion(usuario)"
+                    [attr.aria-label]="'Eliminar usuario ' + usuario.nombre_completo"
+                    title="Eliminar usuario"
+                  >
+                    <app-admin-icono tipo="eliminar"></app-admin-icono>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="filtrados.length === 0">
+              <td colspan="5" class="text-center text-neutral-500">
+                {{
+                  usuarios.length
+                    ? 'No hay usuarios que coincidan con los filtros.'
+                    : 'No hay usuarios registrados.'
+                }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <app-admin-paginacion
+        [total]="filtrados.length"
+        [pagina]="pagina"
+        (cambiar)="pagina = $event"
+      ></app-admin-paginacion>
+    </ng-container>
+    <app-admin-modal
+      *ngIf="mostrandoFormulario"
+      [titulo]="usuarioEditando ? 'Editar usuario' : 'Nuevo usuario'"
+      [ocupado]="guardando"
+      (cerrar)="cerrar()"
+    >
+      <app-admin-mensaje [error]="errorFormulario"></app-admin-mensaje>
+      <form [formGroup]="formulario" (ngSubmit)="guardar()">
+        <fieldset [disabled]="guardando" class="grid gap-5 md:grid-cols-2">
+          <div>
+            <label for="nombre_completo" class="mb-2 block text-sm text-neutral-300"
+              >Nombre completo</label
+            ><input
+              id="nombre_completo"
+              formControlName="nombre_completo"
+              type="text"
+              maxlength="120"
+              class="w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-white disabled:opacity-50"
+              [attr.aria-invalid]="
+                formulario.controls.nombre_completo.invalid &&
+                formulario.controls.nombre_completo.touched
+              "
+            /><app-admin-error-campo
+              [control]="formulario.controls.nombre_completo"
+              mensaje="El nombre debe tener entre 3 y 120 caracteres."
+            ></app-admin-error-campo>
+          </div>
+          <div>
+            <label for="correo" class="mb-2 block text-sm text-neutral-300"
+              >Correo electrónico</label
+            ><input
+              id="correo"
+              formControlName="correo"
+              type="email"
+              maxlength="150"
+              autocomplete="off"
+              class="w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-white disabled:opacity-50"
+              [attr.aria-invalid]="
+                formulario.controls.correo.invalid && formulario.controls.correo.touched
+              "
+            /><app-admin-error-campo
+              [control]="formulario.controls.correo"
+              mensaje="Ingresa un correo válido que no esté registrado por otro usuario."
+            ></app-admin-error-campo>
+          </div>
+          <ng-container *ngIf="!usuarioEditando"
+            ><div>
+              <label for="password" class="mb-2 block text-sm text-neutral-300"
+                >Contraseña inicial</label
+              ><input
+                id="password"
+                formControlName="password"
+                type="password"
+                minlength="8"
+                maxlength="100"
+                autocomplete="new-password"
+                class="w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-white disabled:opacity-50"
+                [attr.aria-invalid]="
+                  formulario.controls.password.invalid && formulario.controls.password.touched
+                "
+              /><app-admin-error-campo
+                [control]="formulario.controls.password"
+                mensaje="La contraseña debe tener entre 8 y 100 caracteres."
+              ></app-admin-error-campo></div
+          ></ng-container>
+          <div>
+            <label for="rol" class="mb-2 block text-sm text-neutral-300">Rol</label
+            ><select
+              id="rol"
+              formControlName="rol"
+              class="w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-white disabled:opacity-50"
+            >
+              <option value="ADMINISTRADOR">Administrador</option>
+              <option value="CLIENTE">Cliente</option></select
+            ><app-admin-error-campo
+              [control]="formulario.controls.rol"
+              mensaje="Selecciona un rol."
+            ></app-admin-error-campo>
+          </div>
+          <div *ngIf="usuarioEditando">
+            <label for="activo" class="mb-2 block text-sm text-neutral-300">Estado</label
+            ><select
+              id="activo"
+              formControlName="activo"
+              class="w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-white disabled:opacity-50"
+            >
+              <option [ngValue]="true">Activo</option>
+              <option [ngValue]="false">Inactivo</option>
+            </select>
+          </div>
+        </fieldset>
+        <p
+          *ngIf="usuarioEditando?.id_usuario === usuarioActualId"
+          class="mt-5 text-sm text-neutral-400"
+        >
+          Tu rol y estado no pueden cambiarse desde tu propia sesión.
+        </p>
+        <div class="mt-6 flex justify-end gap-3">
+          <button
+            type="button"
+            class="mercury-secondary px-4 py-2 disabled:opacity-50"
+            [disabled]="guardando"
+            (click)="cerrar()"
+          >
+            Cancelar</button
+          ><button
+            type="submit"
+            class="mercury-button px-5 py-3 disabled:opacity-50"
+            [disabled]="guardando"
+          >
+            {{ guardando ? 'Guardando...' : 'Guardar usuario' }}
+          </button>
+        </div>
+      </form>
+    </app-admin-modal>
+    <app-admin-modal
+      *ngIf="usuarioEliminando"
+      titulo="Eliminar usuario"
+      [ocupado]="guardando"
+      (cerrar)="cerrar()"
+    >
+      <app-admin-mensaje [error]="errorFormulario"></app-admin-mensaje>
+      <p>
+        Se desactivará la cuenta de {{ usuarioEliminando.nombre_completo }} y todas sus tarjetas
+        quedarán en estado CANCELADA. Se conservarán el usuario, las tarjetas y su historial.
+        Reactivar la cuenta no reactivará sus tarjetas.
+      </p>
+      <div class="mt-6 flex justify-end gap-3">
+        <button
+          type="button"
+          class="mercury-secondary px-4 py-2 disabled:opacity-50"
+          [disabled]="guardando"
+          (click)="cerrar()"
+        >
+          Volver</button
+        ><button
+          type="button"
+          class="mercury-danger px-4 py-2 disabled:opacity-50"
+          [disabled]="guardando"
+          (click)="eliminar()"
+        >
+          {{ guardando ? 'Eliminando...' : 'Confirmar eliminación' }}
+        </button>
+      </div>
+    </app-admin-modal>
+  </div>
 </div>

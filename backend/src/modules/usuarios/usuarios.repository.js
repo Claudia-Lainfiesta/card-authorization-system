@@ -165,7 +165,34 @@ const actualizarRol = async (
 };
 
 
+const editar = async (id, datos) => {
+    const resultado = await db.query(`
+        UPDATE usuarios SET
+            nombre_completo = COALESCE($2, nombre_completo),
+            correo = COALESCE($3, correo),
+            id_rol = COALESCE($4, id_rol),
+            activo = COALESCE($5, activo)
+        WHERE id_usuario = $1 RETURNING id_usuario;
+    `, [id, datos.nombre_completo ?? null, datos.correo ?? null, datos.id_rol ?? null, datos.activo ?? null]);
+    return resultado.rowCount ? buscarPorId(id) : null;
+};
+
+const eliminar = async (id) => require('../../utils/transaction')(async client => {
+    const usuario = await client.query(
+        'UPDATE usuarios SET activo = FALSE WHERE id_usuario = $1 RETURNING id_usuario', [id]
+    );
+    if (!usuario.rowCount) return null;
+    const tarjetas = await client.query(`
+        UPDATE tarjetas SET estado = 'CANCELADA', fecha_actualizacion = NOW()
+        WHERE id_usuario = $1 AND estado IS DISTINCT FROM 'CANCELADA'
+        RETURNING id_tarjeta;
+    `, [id]);
+    return { id_usuario: id, tarjetas_canceladas: tarjetas.rowCount };
+});
+
 module.exports = {
+    editar,
+    eliminar,
 
     buscarPorCorreo,
 

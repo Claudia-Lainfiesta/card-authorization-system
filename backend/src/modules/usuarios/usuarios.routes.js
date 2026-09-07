@@ -1,34 +1,13 @@
-const express =
-    require('express');
-
-const usuariosController =
-    require('./usuarios.controller');
-
-const authMiddleware =
-    require('../../middlewares/auth.middleware');
-
-const requireRole =
-    require('../../middlewares/role.middleware');
-
-
-const router =
-    express.Router();
-
-
-router.get(
-    '/',
-    authMiddleware,
-    requireRole('ADMINISTRADOR'),
-    usuariosController.listar
-);
-
-
-router.put(
-    '/:id/rol',
-    authMiddleware,
-    requireRole('ADMINISTRADOR'),
-    usuariosController.cambiarRol
-);
-
-
+const router = require('express').Router();
+const controller = require('./usuarios.controller');
+const auth = require('../../middlewares/auth.middleware');
+const role = require('../../middlewares/role.middleware');
+const validate = require('../../middlewares/validate.middleware');
+const schemas = require('./usuarios.validation');
+router.use(auth, role('ADMINISTRADOR'));
+router.get('/', controller.listar);
+router.post('/', validate(schemas.crearUsuarioSchema), controller.crear);
+router.put('/:id/rol', validate(schemas.cambiarRolSchema), controller.cambiarRol);
+router.put('/:id', validate(schemas.actualizarUsuarioSchema), controller.actualizar);
+router.delete('/:id', controller.eliminar);
 module.exports = router;

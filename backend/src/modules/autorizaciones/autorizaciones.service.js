@@ -151,6 +151,9 @@ const autorizar =
 
                             return {
 
+                                emisor:
+                                    tarjeta.id_emisor,
+
                                 status:
                                     'DENEGADO',
 
@@ -247,9 +250,9 @@ const autorizar =
 
                     if (
                         datos.fecha_venc !==
-                            vencimientoRegistrado ||
+                        vencimientoRegistrado ||
                         vencimientoRegistrado <
-                            periodo
+                        periodo
                     ) {
 
                         return await denegar(
@@ -410,6 +413,8 @@ const autorizar =
 
                     return {
 
+                        emisor:
+                            tarjeta.id_emisor,
                         status:
                             'APROBADO',
 
@@ -433,6 +438,21 @@ const autorizar =
     };
 
 
+const bitacora = async (query) => {
+    const limit = Number(query.limit ?? 10);
+    const pagina = Number(query.pagina ?? 1);
+    if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100 ||
+        !Number.isSafeInteger(pagina) || pagina < 1 ||
+        !Number.isSafeInteger((pagina - 1) * limit)) {
+        const error = new Error('Paginación inválida');
+        error.statusCode = 400;
+        throw error;
+    }
+    const resultado = await autorizacionesRepository.bitacora(limit, (pagina - 1) * limit);
+    return { ...resultado, pagina, limit };
+};
+
 module.exports = {
+    bitacora,
     autorizar
 };

@@ -139,9 +139,13 @@ app.use(
     transaccionesRoutes
 );
 
+app.use('/api/v1/reportes', require('./modules/reportes/reportes.routes'));
+app.use('/api/v1/emisores', require('./modules/emisores/emisores.routes'));
+app.use('/api/v1/autorizaciones', require('./modules/autorizaciones/bitacora.routes'));
+
 // Autorizaciones
 app.use(
-    '/ws/v1',
+    '/ws/v1/autorizacion',
     autorizacionesRoutes
 );
 

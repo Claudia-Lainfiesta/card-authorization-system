@@ -16,7 +16,9 @@ import {
 
 import {
     ActualizarTarjetaRequest,
+    ActualizarFavoritaRequest,
     CrearTarjetaRequest,
+    FavoritaResponse,
     TarjetaResponse,
     TarjetasResponse
 } from '../models/tarjeta.model';
@@ -79,6 +81,18 @@ export class TarjetasService {
             `${this.apiUrl}/${idTarjeta}`
         );
 
+    }
+
+    actualizarFavorita(
+        idTarjeta: number,
+        favorita: boolean
+    ): Observable<FavoritaResponse> {
+        const datos: ActualizarFavoritaRequest = { favorita };
+
+        return this.http.patch<FavoritaResponse>(
+            `${this.apiUrl}/${idTarjeta}/favorita`,
+            datos
+        );
     }
 
     listarMias():

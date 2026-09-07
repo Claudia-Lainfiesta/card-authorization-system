@@ -1,0 +1,192 @@
+.card-panel {
+  min-width: 0;
+  padding: 20px;
+}
+.card-perspective {
+  perspective: 1000px;
+  border-radius: 20px;
+}
+.card-rotator {
+  position: relative;
+  display: grid;
+  transform-style: preserve-3d;
+  transition: transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+  border-radius: 20px;
+  box-shadow: 0 16px 30px #0005;
+}
+.card-face {
+  grid-area: 1 / 1;
+  min-width: 0;
+  min-height: 220px;
+  padding: 22px;
+  border: 1px solid #ffffff26;
+  border-radius: 20px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.card-front {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 26px;
+  background:
+    radial-gradient(ellipse at 100% 0%, #ffffff13, transparent 60%),
+    linear-gradient(125deg, #333, #171717 48%, #080808);
+}
+.card-front::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: repeating-linear-gradient(115deg, transparent 0 38px, #ffffff03 39px 40px);
+}
+.card-chip {
+  position: relative;
+  flex-shrink: 0;
+  width: 38px;
+  height: 30px;
+  margin-top: 4px;
+  border: 1px solid #c4c4c477;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #d4d4d4, #707070 60%, #bcbcbc);
+  overflow: hidden;
+}
+.card-chip::before,
+.card-chip::after {
+  content: '';
+  position: absolute;
+  background: #39393980;
+}
+.card-chip::before {
+  width: 1px;
+  height: 100%;
+  left: 12px;
+  box-shadow: 12px 0 #39393980;
+}
+.card-chip::after {
+  height: 1px;
+  width: 100%;
+  top: 9px;
+  box-shadow: 0 10px #39393980;
+}
+.card-number {
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: clamp(14px, 1.7vw, 20px);
+  letter-spacing: 0.07em;
+  color: #f5f5f5;
+  text-shadow: 0 1px 1px #000;
+  white-space: nowrap;
+}
+.card-identity {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+}
+.card-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #a3a3a3;
+}
+.card-holder {
+  overflow-wrap: anywhere;
+}
+.card-back {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transform: rotateY(180deg);
+  background: linear-gradient(140deg, #252525, #111);
+}
+.card-back-brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: #d4d4d4;
+}
+.card-stripe {
+  height: 38px;
+  margin: 0 -22px;
+  background: #050505;
+  border-block: 1px solid #ffffff06;
+}
+.card-signature {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 4px;
+  background: repeating-linear-gradient(0deg, #b5b5b5 0 2px, #ccc 2px 4px);
+  color: #262626;
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+.card-signature strong {
+  font-size: 18px;
+  letter-spacing: 0.15em;
+}
+.card-back-note {
+  color: #a3a3a3;
+  font-size: 10px;
+}
+.card-back-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: auto;
+  color: #a3a3a3;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+}
+.card-hint {
+  margin: 14px 0 20px;
+  text-align: center;
+  color: #a3a3a3;
+  font-size: 10px;
+}
+.card-hint span {
+  display: inline-block;
+  margin-right: 4px;
+  font-size: 13px;
+}
+.card-balance {
+  border-top: 1px solid #ffffff12;
+  padding: 20px 4px 4px;
+}
+.card-amount {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  letter-spacing: -0.05em;
+  overflow-wrap: anywhere;
+}
+.card-perspective:focus .card-rotator {
+  transform: rotateY(180deg);
+}
+@media (hover: hover) and (pointer: fine) {
+  .card-perspective:hover .card-rotator {
+    transform: rotateY(180deg);
+  }
+}
+@media (max-width: 420px) {
+  .card-panel {
+    padding: 14px;
+  }
+  .card-face {
+    padding: 18px;
+  }
+  .card-stripe {
+    margin-inline: -18px;
+  }
+  .card-number {
+    font-size: clamp(12px, 4vw, 16px);
+    letter-spacing: 0.025em;
+  }
+}

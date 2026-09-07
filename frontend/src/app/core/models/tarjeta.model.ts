@@ -1,83 +1,89 @@
-export type EstadoTarjeta =
-    'ACTIVA' |
-    'BLOQUEADA' |
-    'VENCIDA' |
-    'CANCELADA';
-
+export type EstadoTarjeta = 'ACTIVA' | 'BLOQUEADA' | 'VENCIDA' | 'CANCELADA';
 
 export interface Tarjeta {
+  id_tarjeta: number;
 
-    id_tarjeta: number;
+  numero_tarjeta: string;
 
-    numero_tarjeta: string;
+  nombre_titular: string;
 
-    nombre_titular: string;
+  fecha_vencimiento: string;
 
-    fecha_vencimiento: string;
+  monto_autorizado: number;
 
-    monto_autorizado: number;
+  monto_disponible: number;
 
-    monto_disponible: number;
+  id_usuario: number;
 
-    id_usuario: number;
+  propietario: string;
 
-    propietario: string;
+  id_emisor: string;
 
-    id_emisor: string;
+  emisor: string;
 
-    emisor: string;
+  estado: EstadoTarjeta;
 
-    estado: EstadoTarjeta;
+  // Preferencia incluida únicamente en las respuestas del cliente.
+  favorita?: boolean;
 
-    fecha_creacion: string;
+  fecha_creacion: string;
 
-    fecha_actualizacion: string;
+  fecha_actualizacion: string;
 }
-
 
 export interface CrearTarjetaRequest {
+  numero_tarjeta: string;
 
-    numero_tarjeta: string;
+  nombre_titular: string;
 
-    nombre_titular: string;
+  cvv: string;
 
-    cvv: string;
+  fecha_vencimiento: string;
 
-    fecha_vencimiento: string;
+  monto_autorizado: number;
 
-    monto_autorizado: number;
+  monto_disponible: number;
 
-    monto_disponible: number;
+  id_usuario: number;
 
-    id_usuario: number;
+  id_emisor: string;
 
-    id_emisor: string;
-
-    estado: EstadoTarjeta;
+  estado: EstadoTarjeta;
 }
-
 
 export interface ActualizarTarjetaRequest {
+  numero_tarjeta?: string;
+  nombre_titular?: string;
+  fecha_vencimiento?: string;
+  cvv?: string;
+  id_usuario?: number;
+  id_emisor?: string;
 
-    monto_autorizado?: number;
+  monto_autorizado?: number;
 
-    monto_disponible?: number;
+  monto_disponible?: number;
 
-    estado?: EstadoTarjeta;
+  estado?: EstadoTarjeta;
 }
-
 
 export interface TarjetasResponse {
-
-    tarjetas: Tarjeta[];
-
+  tarjetas: Tarjeta[];
 }
 
-
 export interface TarjetaResponse {
+  mensaje?: string;
 
-    mensaje?: string;
+  tarjeta: Tarjeta;
+}
 
-    tarjeta: Tarjeta;
+export interface ActualizarFavoritaRequest {
+  favorita: boolean;
+}
 
+export interface FavoritaResponse {
+  mensaje: string;
+  tarjeta: {
+    id_tarjeta: number;
+    favorita: boolean;
+  };
 }

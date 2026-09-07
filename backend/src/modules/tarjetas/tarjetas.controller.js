@@ -185,7 +185,27 @@ const eliminar = async (
 };
 
 
+const actualizarFavorita = async (req, res, next) => {
+    try {
+        const tarjeta = await tarjetasService.actualizarFavorita(
+            req.params.id,
+            req.user,
+            req.body.favorita
+        );
+
+        return res.status(200).json({
+            mensaje: 'Preferencia de tarjeta actualizada correctamente',
+            tarjeta
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
 module.exports = {
+
+    actualizarFavorita,
 
     listarTodas,
 

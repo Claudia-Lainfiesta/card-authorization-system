@@ -20,6 +20,7 @@ const validate =
 
 const {
     crearTarjetaSchema,
+    actualizarFavoritaSchema,
     actualizarTarjetaSchema
 } = require('./tarjetas.validation');
 
@@ -43,6 +44,16 @@ router.get(
     authMiddleware,
     requireRole('CLIENTE'),
     tarjetasController.listarMias
+);
+
+
+// Preferencia exclusiva del cliente propietario, sin restricciones por estado.
+router.patch(
+    '/:id/favorita',
+    authMiddleware,
+    requireRole('CLIENTE'),
+    validate(actualizarFavoritaSchema),
+    tarjetasController.actualizarFavorita
 );
 
 

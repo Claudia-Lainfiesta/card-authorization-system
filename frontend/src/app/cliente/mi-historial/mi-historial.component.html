@@ -1,122 +1,216 @@
-<div class="min-h-screen bg-slate-950 p-6">
+<div class="mercury-bg mercury-shell">
+  <div class="mx-auto max-w-7xl">
+    <nav class="mercury-nav flex flex-wrap items-center" aria-label="Navegación principal">
+      <span class="mercury-brand"
+        ><span class="mercury-mark" aria-hidden="true"></span>MERCURY</span
+      >
 
-    <div class="mx-auto max-w-7xl">
+      <a routerLink="/cliente" class="rounded-lg px-4 py-2 text-neutral-300 hover:bg-neutral-800">
+        Inicio
+      </a>
 
-        <nav class="mb-8 flex flex-wrap items-center gap-3 rounded-xl border border-slate-800 bg-slate-900 p-4">
+      <a
+        routerLink="/cliente/tarjetas"
+        class="rounded-lg px-4 py-2 text-neutral-300 hover:bg-neutral-800"
+      >
+        Mis tarjetas
+      </a>
 
-            <a routerLink="/cliente" class="rounded-lg px-4 py-2 text-slate-300 hover:bg-slate-800">
-                Dashboard
-            </a>
+      <a routerLink="/cliente/historial" class="mercury-button px-4 py-2"> Mi historial </a>
 
-            <a routerLink="/cliente/tarjetas" class="rounded-lg px-4 py-2 text-slate-300 hover:bg-slate-800">
-                Mis tarjetas
-            </a>
-
-            <a routerLink="/cliente/historial" class="rounded-lg bg-emerald-600 px-4 py-2 text-white">
-                Mi historial
-            </a>
-
-            <div class="ml-auto">
-                <app-logout-button></app-logout-button>
-            </div>
-        </nav>
-
-
-        <h1 class="text-3xl font-bold text-white">
-            Mi Historial
-        </h1>
-
-        <p class="mb-8 mt-2 text-slate-400">
-            Consulta tus consumos, pagos y reversos.
-        </p>
-
-
-        <div *ngIf="error" class="mb-5 rounded-lg border border-red-800 bg-red-950 p-3 text-red-300">
-            {{ error }}
-        </div>
-
-
-        <div class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-900">
-
-            <table class="w-full text-left">
-
-                <thead class="border-b border-slate-800 text-sm text-slate-400">
-
-                    <tr>
-
-                        <th class="p-4">Fecha</th>
-                        <th class="p-4">Tarjeta</th>
-                        <th class="p-4">Tipo</th>
-                        <th class="p-4">Comercio</th>
-                        <th class="p-4">Monto</th>
-                        <th class="p-4">Estado</th>
-
-                    </tr>
-
-                </thead>
-
-
-                <tbody>
-
-                    <tr *ngFor="let transaccion of transacciones" class="border-b border-slate-800 text-slate-300">
-
-                        <td class="p-4">
-
-                            {{ transaccion.fecha
-                            | date:'dd/MM/yyyy HH:mm'
-                            }}
-
-                        </td>
-
-                        <td class="p-4 font-mono">
-
-                            {{ transaccion.numero_tarjeta }}
-
-                        </td>
-
-                        <td class="p-4">
-
-                            {{ transaccion.tipo }}
-
-                        </td>
-
-                        <td class="p-4">
-
-                            {{ transaccion.comercio || '-' }}
-
-                        </td>
-
-                        <td class="p-4 font-semibold">
-
-                            Q{{ transaccion.monto | number:'1.2-2' }}
-
-                        </td>
-
-                        <td class="p-4">
-
-                            {{ transaccion.estado }}
-
-                        </td>
-
-                    </tr>
-
-
-                    <tr *ngIf="!cargando && transacciones.length === 0">
-
-                        <td colspan="6" class="p-8 text-center text-slate-500">
-
-                            No tienes transacciones registradas.
-
-                        </td>
-
-                    </tr>
-
-                </tbody>
-
-            </table>
-
-        </div>
-
+      <div class="ml-auto">
+        <app-logout-button></app-logout-button>
+      </div>
+    </nav>
+    <h1 class="text-3xl font-medium text-white">Mi historial</h1>
+    <p class="mb-8 mt-2 text-neutral-400">Consulta tus consumos, pagos y reversos.</p>
+    <div
+      *ngIf="error"
+      class="mb-5 rounded-lg border border-red-800 bg-red-950 p-3 text-red-300"
+      role="alert"
+    >
+      {{ error }}
+      <button type="button" class="mercury-secondary ml-3 px-4 py-2" (click)="cargarHistorial()">
+        Reintentar
+      </button>
     </div>
-
+    <div
+      *ngIf="errorTarjetas"
+      class="mb-5 rounded-lg border border-red-800 bg-red-950 p-3 text-red-300"
+      role="alert"
+    >
+      {{ errorTarjetas }}
+      <button type="button" class="mercury-secondary ml-3 px-4 py-2" (click)="cargarTarjetas()">
+        Reintentar
+      </button>
+    </div>
+    <div class="mb-8 mercury-surface p-6">
+      <div class="grid gap-5 md:grid-cols-3">
+        <div>
+          <label for="filtro-tarjeta" class="mb-2 block text-sm text-neutral-300">Tarjeta</label>
+          <select
+            id="filtro-tarjeta"
+            #tarjetaSelect
+            [value]="filtros.tarjeta"
+            (change)="cambiarTarjeta(tarjetaSelect.value)"
+            [disabled]="cargando || cargandoTarjetas || !!errorTarjetas || !!error"
+            class="w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-white disabled:opacity-50"
+          >
+            <option value="">
+              {{ cargandoTarjetas ? 'Cargando tarjetas...' : 'Todas las tarjetas' }}
+            </option>
+            <option *ngFor="let tarjeta of tarjetas" [value]="tarjeta.id_tarjeta">
+              {{ tarjeta.emisor }} · {{ panel.tarjetaResumida(tarjeta.numero_tarjeta) }}
+            </option>
+          </select>
+        </div>
+        <div>
+          <label for="filtro-tipo" class="mb-2 block text-sm text-neutral-300"
+            >Tipo de movimiento</label
+          >
+          <select
+            id="filtro-tipo"
+            #tipoSelect
+            [value]="filtros.tipo"
+            (change)="cambiarTipo(tipoSelect.value)"
+            [disabled]="cargando || !!error"
+            class="w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-white disabled:opacity-50"
+          >
+            <option value="">Todos los movimientos</option>
+            <option value="CONSUMO">Consumo</option>
+            <option value="PAGO">Pago</option>
+            <option value="REVERSO">Reverso</option>
+          </select>
+        </div>
+        <div>
+          <label for="filtro-periodo" class="mb-2 block text-sm text-neutral-300">Fecha</label>
+          <select
+            id="filtro-periodo"
+            #periodoSelect
+            [value]="filtros.periodo"
+            (change)="cambiarPeriodo(periodoSelect.value)"
+            [disabled]="cargando || !!error"
+            class="w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-white disabled:opacity-50"
+          >
+            <option value="TODOS">Todas las fechas</option>
+            <option value="30">Últimos 30 días</option>
+            <option value="90">Últimos 90 días</option>
+            <option value="ANIO">Este año</option>
+          </select>
+        </div>
+      </div>
+      <button
+        type="button"
+        class="mercury-secondary mt-5 px-4 py-2 disabled:opacity-50"
+        [disabled]="cargando || !!error"
+        (click)="limpiarFiltros()"
+      >
+        Limpiar filtros
+      </button>
+    </div>
+    <div *ngIf="cargando" class="mercury-surface p-8 text-center text-neutral-400" role="status">
+      <span
+        class="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-neutral-700 border-t-neutral-300 motion-reduce:animate-none"
+        aria-hidden="true"
+      ></span>
+      Cargando tu historial...
+    </div>
+    <ng-container *ngIf="!cargando && !error">
+      <div class="mercury-table overflow-x-auto mercury-surface">
+        <table class="w-full text-left">
+          <caption class="sr-only">
+            Historial de transacciones según los filtros seleccionados
+          </caption>
+          <thead class="border-b border-neutral-800 text-sm text-neutral-400">
+            <tr>
+              <th scope="col" class="p-4">Fecha y hora</th>
+              <th scope="col" class="p-4">Comercio o concepto</th>
+              <th scope="col" class="p-4">Tarjeta</th>
+              <th scope="col" class="p-4">Tipo</th>
+              <th scope="col" class="p-4">Monto</th>
+              <th scope="col" class="p-4">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let transaccion of transaccionesPagina"
+              class="border-b border-neutral-800 text-neutral-300"
+            >
+              <td class="p-4 whitespace-nowrap">
+                {{ transaccion.fecha | date: 'dd/MM/yyyy HH:mm' }}
+              </td>
+              <td class="p-4">{{ panel.concepto(transaccion) }}</td>
+              <td class="p-4 font-mono">{{ panel.tarjetaResumida(transaccion.numero_tarjeta) }}</td>
+              <td
+                class="p-4"
+                [class.text-red-300]="transaccion.tipo === 'CONSUMO'"
+                [class.text-emerald-300]="transaccion.tipo !== 'CONSUMO'"
+              >
+                {{ transaccion.tipo }}
+              </td>
+              <td
+                class="p-4 whitespace-nowrap font-semibold"
+                [class.text-red-300]="transaccion.tipo === 'CONSUMO'"
+                [class.text-emerald-300]="transaccion.tipo !== 'CONSUMO'"
+              >
+                {{ transaccion.tipo === 'CONSUMO' ? '−' : '+' }}Q
+                {{ transaccion.monto | number: '1.2-2' }}
+              </td>
+              <td class="p-4">
+                <span
+                  class="mercury-badge"
+                  [attr.data-status]="transaccion.estado"
+                  [ngStyle]="panel.estiloEstado(transaccion.estado)"
+                  >{{ transaccion.estado }}</span
+                >
+              </td>
+            </tr>
+            <tr *ngIf="transacciones.length === 0">
+              <td colspan="6" class="p-8 text-center text-neutral-500">
+                No tienes transacciones registradas.
+              </td>
+            </tr>
+            <tr *ngIf="transacciones.length > 0 && filtradas.length === 0">
+              <td colspan="6" class="p-8 text-center text-neutral-500">
+                No hay movimientos que coincidan con los filtros seleccionados.
+                <button
+                  type="button"
+                  class="mercury-secondary mt-4 px-4 py-2 block mx-auto"
+                  (click)="limpiarFiltros()"
+                >
+                  Ver todos los movimientos
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div
+        *ngIf="filtradas.length > 0"
+        class="mt-5 flex flex-wrap items-center justify-between gap-5"
+      >
+        <p class="text-sm text-neutral-400" role="status">
+          {{ filtradas.length }} movimientos · Página {{ pagina }} de {{ totalPaginas }}
+        </p>
+        <nav *ngIf="totalPaginas > 1" class="flex gap-3" aria-label="Paginación del historial">
+          <button
+            type="button"
+            class="mercury-secondary px-4 py-2 disabled:opacity-50"
+            [disabled]="pagina === 1"
+            (click)="cambiarPagina(pagina - 1)"
+          >
+            Anterior
+          </button>
+          <button
+            type="button"
+            class="mercury-secondary px-4 py-2 disabled:opacity-50"
+            [disabled]="pagina === totalPaginas"
+            (click)="cambiarPagina(pagina + 1)"
+          >
+            Siguiente
+          </button>
+        </nav>
+      </div>
+    </ng-container>
+  </div>
 </div>

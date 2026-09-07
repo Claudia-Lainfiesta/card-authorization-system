@@ -1,388 +1,390 @@
-<div class="min-h-screen bg-slate-950 p-6">
-
-    <div class="mx-auto max-w-7xl">
-
-        <nav class="mb-8 flex flex-wrap items-center gap-3 rounded-xl border border-slate-800 bg-slate-900 p-4">
-
-            <a routerLink="/admin" class="rounded-lg px-4 py-2 text-slate-300 hover:bg-slate-800">
-                Dashboard
-            </a>
-
-            <a routerLink="/admin/tarjetas" class="rounded-lg bg-indigo-600 px-4 py-2 text-white">
-                Tarjetas
-            </a>
-
-            <a routerLink="/admin/usuarios" class="rounded-lg px-4 py-2 text-slate-300 hover:bg-slate-800">
-                Usuarios
-            </a>
-
-            <div class="ml-auto">
-                <app-logout-button></app-logout-button>
-            </div>
-        </nav>
-
-
-        <div class="mb-6 flex items-center justify-between">
-
-            <div>
-
-                <h1 class="text-3xl font-bold text-white">
-                    Gestión de Tarjetas
-                </h1>
-
-                <p class="mt-1 text-slate-400">
-                    Alta, edición y cancelación de tarjetas.
-                </p>
-
-            </div>
-
-
-            <button type="button" (click)="abrirFormularioCreacion()"
-                class="rounded-lg bg-indigo-600 px-5 py-3 font-semibold text-white hover:bg-indigo-500">
-
-                {{ mostrandoFormulario
-                ? 'Cerrar'
-                : 'Nueva tarjeta'
-                }}
-
-            </button>
-
-        </div>
-
-
-        <div *ngIf="mensaje" class="mb-5 rounded-lg border border-emerald-800 bg-emerald-950 p-3 text-emerald-300">
-            {{ mensaje }}
-        </div>
-
-
-        <div *ngIf="error" class="mb-5 rounded-lg border border-red-800 bg-red-950 p-3 text-red-300">
-            {{ error }}
-        </div>
-
-
-        <!-- CREAR TARJETA -->
-
-        <div *ngIf="mostrandoFormulario" class="mb-8 rounded-xl border border-slate-800 bg-slate-900 p-6">
-
-            <h2 class="mb-5 text-xl font-bold text-white">
-                Crear tarjeta
-            </h2>
-
-
-            <form [formGroup]="formularioCreacion" (ngSubmit)="crearTarjeta()" class="grid gap-5 md:grid-cols-2">
-
-                <div>
-
-                    <label class="mb-2 block text-sm text-slate-300">
-                        Número de tarjeta
-                    </label>
-
-                    <input type="text" formControlName="numero_tarjeta" maxlength="16" placeholder="4123456789012345"
-                        class="w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-white">
-
-                </div>
-
-
-                <div>
-
-                    <label class="mb-2 block text-sm text-slate-300">
-                        Titular
-                    </label>
-
-                    <input type="text" formControlName="nombre_titular"
-                        class="w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-white">
-
-                </div>
-
-
-                <div>
-
-                    <label class="mb-2 block text-sm text-slate-300">
-                        CVV
-                    </label>
-
-                    <input type="password" maxlength="3" formControlName="cvv"
-                        class="w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-white">
-
-                </div>
-
-
-                <div>
-
-                    <label class="mb-2 block text-sm text-slate-300">
-                        Vencimiento (YYYYMM)
-                    </label>
-
-                    <input type="text" maxlength="6" formControlName="fecha_vencimiento" placeholder="202812"
-                        class="w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-white">
-
-                </div>
-
-
-                <div>
-
-                    <label class="mb-2 block text-sm text-slate-300">
-                        Monto autorizado
-                    </label>
-
-                    <input type="number" min="0" formControlName="monto_autorizado"
-                        class="w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-white">
-
-                </div>
-
-
-                <div>
-
-                    <label class="mb-2 block text-sm text-slate-300">
-                        Monto disponible
-                    </label>
-
-                    <input type="number" min="0" formControlName="monto_disponible"
-                        class="w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-white">
-
-                </div>
-
-
-                <div>
-
-                    <label class="mb-2 block text-sm text-slate-300">
-                        Cliente propietario
-                    </label>
-
-                    <select formControlName="id_usuario"
-                        class="w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-white">
-
-                        <option [ngValue]="null">
-                            Selecciona un usuario
-                        </option>
-
-                        <option *ngFor="let usuario of usuarios" [ngValue]="usuario.id_usuario">
-
-                            {{ usuario.nombre_completo }}
-                            - {{ usuario.correo }}
-
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <div>
-
-                    <label class="mb-2 block text-sm text-slate-300">
-                        Emisor
-                    </label>
-
-                    <input type="text" formControlName="id_emisor"
-                        class="w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-white">
-
-                </div>
-
-
-                <div>
-
-                    <label class="mb-2 block text-sm text-slate-300">
-                        Estado
-                    </label>
-
-                    <select formControlName="estado"
-                        class="w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-white">
-
-                        <option *ngFor="let estado of estados" [value]="estado">
-                            {{ estado }}
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <div class="flex items-end">
-
-                    <button type="submit"
-                        class="w-full rounded-lg bg-emerald-600 px-5 py-3 font-semibold text-white hover:bg-emerald-500">
-                        Guardar tarjeta
-                    </button>
-
-                </div>
-
-            </form>
-
-        </div>
-
-
-        <!-- EDITAR -->
-
-        <div *ngIf="tarjetaEditando" class="mb-8 rounded-xl border border-indigo-800 bg-slate-900 p-6">
-
-            <h2 class="mb-2 text-xl font-bold text-white">
-                Editar tarjeta
-            </h2>
-
-            <p class="mb-5 text-slate-400">
-                {{ tarjetaEditando.numero_tarjeta }}
-            </p>
-
-
-            <form [formGroup]="formularioEdicion" (ngSubmit)="guardarEdicion()" class="grid gap-5 md:grid-cols-3">
-
-                <div>
-
-                    <label class="mb-2 block text-sm text-slate-300">
-                        Monto autorizado
-                    </label>
-
-                    <input type="number" formControlName="monto_autorizado"
-                        class="w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-white">
-
-                </div>
-
-
-                <div>
-
-                    <label class="mb-2 block text-sm text-slate-300">
-                        Monto disponible
-                    </label>
-
-                    <input type="number" formControlName="monto_disponible"
-                        class="w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-white">
-
-                </div>
-
-
-                <div>
-
-                    <label class="mb-2 block text-sm text-slate-300">
-                        Estado
-                    </label>
-
-                    <select formControlName="estado"
-                        class="w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-white">
-
-                        <option *ngFor="let estado of estados" [value]="estado">
-                            {{ estado }}
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <div class="flex gap-3 md:col-span-3">
-
-                    <button type="submit" class="rounded-lg bg-indigo-600 px-5 py-3 font-semibold text-white">
-                        Guardar cambios
-                    </button>
-
-                    <button type="button" (click)="cancelarEdicion()"
-                        class="rounded-lg bg-slate-700 px-5 py-3 text-white">
-                        Cancelar
-                    </button>
-
-                </div>
-
-            </form>
-
-        </div>
-
-
-        <!-- TABLA -->
-
-        <div class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-900">
-
-            <table class="w-full text-left">
-
-                <thead class="border-b border-slate-800 text-sm text-slate-400">
-
-                    <tr>
-
-                        <th class="p-4">ID</th>
-                        <th class="p-4">Tarjeta</th>
-                        <th class="p-4">Titular</th>
-                        <th class="p-4">Propietario</th>
-                        <th class="p-4">Límite</th>
-                        <th class="p-4">Disponible</th>
-                        <th class="p-4">Estado</th>
-                        <th class="p-4">Acciones</th>
-
-                    </tr>
-
-                </thead>
-
-
-                <tbody>
-
-                    <tr *ngFor="let tarjeta of tarjetas" class="border-b border-slate-800 text-slate-300">
-
-                        <td class="p-4">
-                            {{ tarjeta.id_tarjeta }}
-                        </td>
-
-                        <td class="p-4 font-mono">
-                            {{ tarjeta.numero_tarjeta }}
-                        </td>
-
-                        <td class="p-4">
-                            {{ tarjeta.nombre_titular }}
-                        </td>
-
-                        <td class="p-4">
-                            {{ tarjeta.propietario }}
-                        </td>
-
-                        <td class="p-4">
-                            Q{{ tarjeta.monto_autorizado | number:'1.2-2' }}
-                        </td>
-
-                        <td class="p-4">
-                            Q{{ tarjeta.monto_disponible | number:'1.2-2' }}
-                        </td>
-
-                        <td class="p-4">
-
-                            <span class="rounded-full bg-slate-800 px-3 py-1 text-sm">
-                                {{ tarjeta.estado }}
-                            </span>
-
-                        </td>
-
-                        <td class="p-4">
-
-                            <div class="flex gap-2">
-
-                                <button type="button" (click)="editar(tarjeta)"
-                                    class="rounded bg-indigo-600 px-3 py-2 text-sm text-white">
-                                    Editar
-                                </button>
-
-                                <button type="button" (click)="cancelarTarjeta(tarjeta)"
-                                    [disabled]="tarjeta.estado === 'CANCELADA'"
-                                    class="rounded bg-red-700 px-3 py-2 text-sm text-white disabled:opacity-40">
-                                    Cancelar
-                                </button>
-
-                            </div>
-
-                        </td>
-
-                    </tr>
-
-
-                    <tr *ngIf="!cargando && tarjetas.length === 0">
-
-                        <td colspan="8" class="p-8 text-center text-slate-500">
-                            No hay tarjetas registradas.
-                        </td>
-
-                    </tr>
-
-                </tbody>
-
-            </table>
-
-        </div>
-
+<div class="mercury-bg mercury-shell">
+  <div class="mx-auto max-w-7xl">
+    <nav class="mercury-nav flex flex-wrap items-center" aria-label="Navegación principal">
+      <span class="mercury-brand"
+        ><span class="mercury-mark" aria-hidden="true"></span>MERCURY</span
+      >
+      <a routerLink="/admin" class="rounded-lg px-4 py-2 text-neutral-300 hover:bg-neutral-800"
+        >Inicio</a
+      >
+      <a routerLink="/admin/tarjetas" class="mercury-button px-4 py-2">Tarjetas</a>
+      <a
+        routerLink="/admin/usuarios"
+        class="rounded-lg px-4 py-2 text-neutral-300 hover:bg-neutral-800"
+        >Usuarios</a
+      >
+      <a
+        routerLink="/admin/bitacora"
+        class="rounded-lg px-4 py-2 text-neutral-300 hover:bg-neutral-800"
+        >Bitácora</a
+      >
+      <div class="ml-auto"><app-logout-button></app-logout-button></div>
+    </nav>
+
+    <div class="mb-8 flex flex-wrap items-center justify-between gap-5">
+      <div>
+        <h1 class="text-3xl font-medium text-white">Gestión de tarjetas</h1>
+        <p class="mt-1 text-neutral-400">Alta, edición y cancelación de tarjetas.</p>
+      </div>
+      <button
+        type="button"
+        class="mercury-button px-5 py-3 disabled:opacity-50"
+        [disabled]="cargandoCatalogos || !!errorCatalogos"
+        (click)="abrirFormularioCreacion()"
+      >
+        Nueva tarjeta
+      </button>
     </div>
-
+    <app-admin-mensaje [error]="error" [mensaje]="mensaje"></app-admin-mensaje>
+    <button
+      *ngIf="error"
+      type="button"
+      class="mercury-secondary mb-5 px-4 py-2"
+      (click)="cargarTarjetas()"
+    >
+      Reintentar tarjetas
+    </button>
+    <app-admin-mensaje [error]="errorCatalogos"></app-admin-mensaje>
+    <button
+      *ngIf="errorCatalogos"
+      type="button"
+      class="mercury-secondary mb-5 px-4 py-2"
+      (click)="cargarCatalogos()"
+    >
+      Reintentar usuarios y emisores
+    </button>
+    <div class="mb-8 mercury-surface grid gap-5 p-6 md:grid-cols-2">
+      <div>
+        <label for="buscar-tarjeta" class="mb-2 block text-sm text-neutral-300"
+          >Buscar por titular o últimos 4 dígitos</label
+        ><input
+          id="buscar-tarjeta"
+          type="search"
+          #buscar
+          [value]="busqueda"
+          (input)="busqueda = buscar.value; filtrar()"
+          class="w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-white disabled:opacity-50"
+        />
+      </div>
+      <div>
+        <label for="estado-tarjeta" class="mb-2 block text-sm text-neutral-300">Estado</label
+        ><select
+          id="estado-tarjeta"
+          #estado
+          [value]="estadoFiltro"
+          (change)="estadoFiltro = estado.value; filtrar()"
+          class="w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-white disabled:opacity-50"
+        >
+          <option value="">Todas</option>
+          <option *ngFor="let estado of estados" [value]="estado">{{ estado }}</option>
+        </select>
+      </div>
+    </div>
+    <ng-container *ngIf="cargando"
+      ><div class="mercury-surface p-8 text-center text-neutral-400" role="status">
+        <span
+          class="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-neutral-700 border-t-neutral-300 motion-reduce:animate-none"
+          aria-hidden="true"
+        ></span
+        >Cargando...
+      </div></ng-container
+    >
+    <ng-container *ngIf="!cargando && !error">
+      <div class="mercury-table overflow-x-auto mercury-surface">
+        <table class="w-full text-left">
+          <caption class="sr-only">
+            Todas las tarjetas del sistema
+          </caption>
+          <thead class="border-b border-neutral-800 text-sm text-neutral-400">
+            <tr>
+              <th scope="col">Número</th>
+              <th scope="col">Titular</th>
+              <th scope="col">Emisor</th>
+              <th scope="col">Disponible</th>
+              <th scope="col">Estado</th>
+              <th scope="col" class="text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let tarjeta of visibles"
+              class="border-b border-neutral-800 text-neutral-300"
+            >
+              <td class="font-mono">{{ panel.numeroEnmascarado(tarjeta.numero_tarjeta) }}</td>
+              <td>{{ tarjeta.nombre_titular }}</td>
+              <td>{{ tarjeta.emisor }}</td>
+              <td class="whitespace-nowrap">Q {{ tarjeta.monto_disponible | number: '1.2-2' }}</td>
+              <td>
+                <span
+                  class="mercury-badge"
+                  [attr.data-status]="tarjeta.estado"
+                  [ngStyle]="panel.estiloEstado(tarjeta.estado)"
+                  >{{ tarjeta.estado }}</span
+                >
+              </td>
+              <td>
+                <div class="flex justify-end gap-3">
+                  <button
+                    type="button"
+                    class="mercury-secondary inline-flex items-center justify-center px-3 py-2 disabled:opacity-50"
+                    [disabled]="cargandoCatalogos || !!errorCatalogos"
+                    (click)="editar(tarjeta)"
+                    [attr.aria-label]="
+                      'Editar tarjeta ' + panel.tarjetaResumida(tarjeta.numero_tarjeta)
+                    "
+                    title="Editar tarjeta"
+                  >
+                    <app-admin-icono tipo="editar"></app-admin-icono>
+                  </button>
+                  <button
+                    type="button"
+                    class="mercury-danger inline-flex items-center justify-center px-3 py-2 disabled:opacity-50"
+                    [disabled]="tarjeta.estado === 'CANCELADA'"
+                    (click)="confirmarCancelacion(tarjeta)"
+                    [attr.aria-label]="
+                      'Cancelar tarjeta ' + panel.tarjetaResumida(tarjeta.numero_tarjeta)
+                    "
+                    title="Cancelar tarjeta"
+                  >
+                    <app-admin-icono tipo="eliminar"></app-admin-icono>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="filtradas.length === 0">
+              <td colspan="6" class="text-center text-neutral-500">
+                {{
+                  tarjetas.length
+                    ? 'No hay tarjetas que coincidan con los filtros.'
+                    : 'No hay tarjetas registradas.'
+                }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <app-admin-paginacion
+        [total]="filtradas.length"
+        [pagina]="pagina"
+        (cambiar)="pagina = $event"
+      ></app-admin-paginacion>
+    </ng-container>
+    <app-admin-modal
+      *ngIf="mostrandoFormulario"
+      [titulo]="tarjetaEditando ? 'Editar tarjeta' : 'Nueva tarjeta'"
+      [ocupado]="guardando"
+      (cerrar)="cerrar()"
+    >
+      <app-admin-mensaje [error]="errorFormulario"></app-admin-mensaje>
+      <form [formGroup]="formulario" (ngSubmit)="guardar()">
+        <fieldset [disabled]="guardando" class="grid gap-5 md:grid-cols-2">
+          <div>
+            <label for="numero_tarjeta" class="mb-2 block text-sm text-neutral-300"
+              >Número de tarjeta</label
+            ><input
+              id="numero_tarjeta"
+              formControlName="numero_tarjeta"
+              type="text"
+              inputmode="numeric"
+              autocomplete="off"
+              [attr.maxlength]="tarjetaEditando ? 19 : 16"
+              class="w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-white disabled:opacity-50"
+              [attr.aria-invalid]="
+                formulario.controls.numero_tarjeta.invalid &&
+                formulario.controls.numero_tarjeta.touched
+              "
+            /><app-admin-error-campo
+              [control]="formulario.controls.numero_tarjeta"
+              mensaje="Usa 16 dígitos comenzando con 4. El número debe ser único."
+            ></app-admin-error-campo>
+          </div>
+          <div>
+            <label for="nombre_titular" class="mb-2 block text-sm text-neutral-300"
+              >Nombre del titular</label
+            ><input
+              id="nombre_titular"
+              formControlName="nombre_titular"
+              type="text"
+              maxlength="120"
+              class="w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-white disabled:opacity-50"
+              [attr.aria-invalid]="
+                formulario.controls.nombre_titular.invalid &&
+                formulario.controls.nombre_titular.touched
+              "
+            /><app-admin-error-campo
+              [control]="formulario.controls.nombre_titular"
+              mensaje="El titular debe tener entre 3 y 120 caracteres."
+            ></app-admin-error-campo>
+          </div>
+          <div>
+            <label for="fecha_vencimiento" class="mb-2 block text-sm text-neutral-300"
+              >Vencimiento (YYYYMM)</label
+            ><input
+              id="fecha_vencimiento"
+              formControlName="fecha_vencimiento"
+              type="text"
+              inputmode="numeric"
+              maxlength="6"
+              placeholder="YYYYMM"
+              class="w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-white disabled:opacity-50"
+              [attr.aria-invalid]="
+                formulario.controls.fecha_vencimiento.invalid &&
+                formulario.controls.fecha_vencimiento.touched
+              "
+            /><app-admin-error-campo
+              [control]="formulario.controls.fecha_vencimiento"
+              mensaje="Ingresa el año y un mes válido, por ejemplo 203012."
+            ></app-admin-error-campo>
+          </div>
+          <div>
+            <label for="cvv" class="mb-2 block text-sm text-neutral-300">CVV</label
+            ><input
+              id="cvv"
+              formControlName="cvv"
+              type="password"
+              inputmode="numeric"
+              maxlength="3"
+              autocomplete="new-password"
+              class="w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-white disabled:opacity-50"
+              [attr.aria-invalid]="
+                formulario.controls.cvv.invalid && formulario.controls.cvv.touched
+              "
+            /><app-admin-error-campo
+              [control]="formulario.controls.cvv"
+              mensaje="Ingresa los 3 dígitos del CVV."
+            ></app-admin-error-campo>
+          </div>
+          <div>
+            <label for="monto_autorizado" class="mb-2 block text-sm text-neutral-300"
+              >Monto autorizado (Q)</label
+            ><input
+              id="monto_autorizado"
+              formControlName="monto_autorizado"
+              type="number"
+              min="0"
+              step="0.01"
+              class="w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-white disabled:opacity-50"
+              [attr.aria-invalid]="
+                formulario.controls.monto_autorizado.invalid &&
+                formulario.controls.monto_autorizado.touched
+              "
+            /><app-admin-error-campo
+              [control]="formulario.controls.monto_autorizado"
+              mensaje="Ingresa un monto no negativo con hasta dos decimales."
+            ></app-admin-error-campo>
+          </div>
+          <div>
+            <label for="id_emisor" class="mb-2 block text-sm text-neutral-300">Emisor</label
+            ><select
+              id="id_emisor"
+              formControlName="id_emisor"
+              class="w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-white disabled:opacity-50"
+            >
+              <option value="">Selecciona un emisor</option>
+              <option
+                *ngFor="let emisor of emisores"
+                [value]="emisor.id_emisor"
+                [disabled]="!emisor.activo && emisor.id_emisor !== tarjetaEditando?.id_emisor"
+              >
+                {{ emisor.nombre }}{{ emisor.activo ? '' : ' (inactivo)' }}
+              </option></select
+            ><app-admin-error-campo
+              [control]="formulario.controls.id_emisor"
+              mensaje="Selecciona un emisor."
+            ></app-admin-error-campo>
+          </div>
+          <div>
+            <label for="id_usuario" class="mb-2 block text-sm text-neutral-300"
+              >Usuario propietario</label
+            ><select
+              id="id_usuario"
+              formControlName="id_usuario"
+              class="w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-white disabled:opacity-50"
+            >
+              <option [ngValue]="0">Selecciona un usuario</option>
+              <option
+                *ngFor="let usuario of usuarios"
+                [ngValue]="usuario.id_usuario"
+                [disabled]="!usuario.activo && usuario.id_usuario !== tarjetaEditando?.id_usuario"
+              >
+                {{ usuario.nombre_completo }} · {{ usuario.correo
+                }}{{ usuario.activo ? '' : ' (inactivo)' }}
+              </option></select
+            ><app-admin-error-campo
+              [control]="formulario.controls.id_usuario"
+              mensaje="Selecciona el usuario propietario."
+            ></app-admin-error-campo>
+          </div>
+          <div>
+            <label for="estado" class="mb-2 block text-sm text-neutral-300">Estado</label
+            ><select
+              id="estado"
+              formControlName="estado"
+              class="w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-white disabled:opacity-50"
+            >
+              <option value="ACTIVA">Activa</option>
+              <option value="BLOQUEADA">Bloqueada</option>
+              <option *ngIf="tarjetaEditando?.estado === 'VENCIDA'" value="VENCIDA">Vencida</option>
+              <option value="CANCELADA">Cancelada</option></select
+            ><app-admin-error-campo
+              [control]="formulario.controls.estado"
+              mensaje="Selecciona un estado."
+            ></app-admin-error-campo>
+          </div>
+        </fieldset>
+        <p *ngIf="tarjetaEditando" class="mt-5 text-sm text-neutral-400">
+          Conserva el número enmascarado para mantenerlo o introduce uno nuevo. Deja el CVV vacío
+          para conservarlo. El saldo disponible se ajustará manteniendo el monto utilizado.
+        </p>
+        <p *ngIf="!tarjetaEditando" class="mt-5 text-sm text-neutral-400">
+          El saldo disponible inicial será igual al monto autorizado.
+        </p>
+        <div class="mt-6 flex justify-end gap-3">
+          <button
+            type="button"
+            class="mercury-secondary px-4 py-2 disabled:opacity-50"
+            [disabled]="guardando"
+            (click)="cerrar()"
+          >
+            Cancelar</button
+          ><button
+            type="submit"
+            class="mercury-button px-5 py-3 disabled:opacity-50"
+            [disabled]="guardando"
+          >
+            {{ guardando ? 'Guardando...' : 'Guardar tarjeta' }}
+          </button>
+        </div>
+      </form>
+    </app-admin-modal>
+    <app-admin-modal
+      *ngIf="tarjetaEliminando"
+      titulo="Cancelar tarjeta"
+      [ocupado]="guardando"
+      (cerrar)="cerrar()"
+    >
+      <app-admin-mensaje [error]="errorFormulario"></app-admin-mensaje>
+      <p>
+        La tarjeta {{ panel.numeroEnmascarado(tarjetaEliminando.numero_tarjeta) }} quedará en estado
+        CANCELADA. Se conservarán su registro y su historial.
+      </p>
+      <div class="mt-6 flex justify-end gap-3">
+        <button
+          type="button"
+          class="mercury-secondary px-4 py-2 disabled:opacity-50"
+          [disabled]="guardando"
+          (click)="cerrar()"
+        >
+          Volver</button
+        ><button
+          type="button"
+          class="mercury-danger px-4 py-2 disabled:opacity-50"
+          [disabled]="guardando"
+          (click)="cancelarTarjeta()"
+        >
+          {{ guardando ? 'Cancelando...' : 'Confirmar cancelación' }}
+        </button>
+      </div>
+    </app-admin-modal>
+  </div>
 </div>
