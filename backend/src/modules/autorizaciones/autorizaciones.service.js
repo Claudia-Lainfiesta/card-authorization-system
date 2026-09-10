@@ -219,7 +219,14 @@ const autorizar =
                     // REGLA 3
                     // TITULAR
                     // ============================
-
+                    console.log('DEBUG TITULAR:', {
+                        recibido: datos.nombre,
+                        registrado: tarjeta.nombre_titular,
+                        recibidoNormalizado: normalizarNombre(datos.nombre),
+                        registradoNormalizado: normalizarNombre(tarjeta.nombre_titular),
+                        longitudRecibido: datos.nombre.length,
+                        longitudRegistrado: tarjeta.nombre_titular.length
+                    });
                     if (
                         normalizarNombre(
                             datos.nombre
@@ -227,6 +234,8 @@ const autorizar =
                         normalizarNombre(
                             tarjeta.nombre_titular
                         )
+
+
                     ) {
 
                         return await denegar(
